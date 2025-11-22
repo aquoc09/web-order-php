@@ -1,0 +1,45 @@
+
+.flag-icon {
+  width: 20px;
+  height: 14px;
+}
+.restaurant-list {
+  margin-top: 20px;
+}
+
+.restaurant-item {
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.restaurant-item p {
+  margin: 5px 0;
+}
+.restaurant-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.btn-warning {
+  background-color: #ff9900;
+  color: white;
+  border: none;
+}
+
+.btn-warning:hover {
+  background-color: #e68900;
+}
+
+.bg-info {
+  background-color: #a2d8e7;
+}
+
+/* Breadcrumb */
+.breadcrumb-nav {
+  font-size: 0.875rem;
+   
+}

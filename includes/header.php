@@ -1,0 +1,112 @@
+<?php
+include_once 'database/conf.php';
+//include_once 'modules/refreshToken.php';
+$token = $_COOKIE['auth_token'] ?? '';
+
+if ($token) {
+    $sql = "SELECT u.* FROM user_tokens t 
+            JOIN user u ON u.id = t.user_id
+            WHERE t.token = ? AND t.expires_at > NOW()";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 1) {
+        $currentUser = $result->fetch_assoc();
+    } else {
+        $currentUser = null;
+    }
+} else {
+    $currentUser = null;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực đơn</title>
+    <link rel="stylesheet" href="./css/menu.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body style="background-color: #EADEC5;">
+
+<div class="fixed-top-wrapper">
+    <!-- Top bar user -->
+    <div class="top-bar" id="user-header">
+        <?php if(isset($currentUser)): ?>
+            <span>Xin chào, <?= htmlspecialchars($currentUser['username']) ?></span>
+            <a href="./modules/logout.php" id="logoutBtn"><i class="bi bi-box-arrow-right"></i>Đăng xuất</a>
+            <?php if($currentUser['role'] === 'admin'): ?>
+                <a href="./admin/index.php"><i class="bi bi-person-gear"></i>Admin</a>
+            <?php endif; ?>
+            <a href="./user-form.php"><i class="bi bi-person-circle"></i>Tài khoản</a>
+        <?php else: ?>
+            <a href="./register-form.php"><i class="bi bi-person-plus"></i>Đăng ký</a>
+            <a href="./login-form.php"><i class="bi bi-person-circle"></i>Đăng nhập</a>
+        <?php endif; ?>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-custom">
+        <div class="container-fluid" id="header-menu">
+            <a class="navbar-brand d-flex align-items-center" href="./index.php">
+                    <div class="logo"></div>
+                </a>
+
+                <div class="hmenu navbar-expand-lg d-none d-lg-block">
+                    <ul class="navbar-nav flex-row">
+                    <li class="nav-item">
+                        <a class="nav-link" href="./promotion.php">Ưu Đãi</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./menu.php">Thực Đơn</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./order.php">Order</a>
+                    </li>
+                    </ul>
+                </div>
+
+                <!-- Toggle button (hamburger menu) -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navbar links -->
+                <div class="collapse navbar-collapse justify-content-center" id="mainNavbar">
+                    <ul class="navbar-nav mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="./promotion.php">Ưu Đãi</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./menu.php">Thực đơn</a>
+                        </li>
+                        <li>
+                            <a class="nav-link" href="./info.php">Thông tin</a>
+                        </li>
+                    </ul>
+                </div>
+        </div>
+    </nav>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (confirm("Bạn có chắc muốn đăng xuất?")) {
+                window.location.href = "./modules/logout.php";
+            }
+        });
+    }
+});
+</script>
+

@@ -1,0 +1,105 @@
+@media (min-width: 768px) {
+  .menu-sidebar {
+    display: block;
+    width: 220px;
+  }
+
+  .menu-desktop {
+    display: block;
+  }
+
+  .menu-mobile-bar {
+    display: none;
+  }
+}
+
+/* Mobile view - top bar dropdown */
+@media (max-width: 767.98px) {
+  .menu-sidebar {
+    display: none;
+  }
+
+  .menu-mobile-bar {
+    display: flex;
+    padding: 0.5rem;
+  }
+}
+
+.nav-text-title {
+  color: #ef9309;
+  font-weight: bold;
+}
+
+.nav-text-title:hover {
+  color: #262625;
+}
+
+.nav-item-text-title {
+  color: #292828;
+  font-weight: bold;
+}
+
+.nav-item-text-title:hover {
+  color: #dc552c;
+}
+
+.nav-item-text-title.active {
+  color: #dc552c !important;
+}
+
+.combo-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.combo-card .price {
+  font-size: 1.2rem;
+  color: #000;
+  font-weight: bold;
+}
+
+.combo-card small {
+  color: #888;
+}
+
+.combo-card img {
+  width: 100%;
+  max-width: 100%;
+  max-height: 200px;
+  /* Giới hạn chiều cao */
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.combo-item img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.price {
+  font-size: 1.5rem;
+  color: #000;
+}
+
+.unit {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.combo-item {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 2rem;
+}
+
+.product-grid {
+}
+
+#orderMenu{
+}
+
+#orderMenu ul li a.active{
+  color: #dc552c;
+}
