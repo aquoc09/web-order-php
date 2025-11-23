@@ -40,9 +40,18 @@ if($result_categories){
         <?php while($item = $items->fetch_assoc()): ?>
             <div class="col">
                 <div class="text-center">
-                    <img src="img/food/menu/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($item['name']) ?>">
-                    <div class="fw-medium mt-2"><?= htmlspecialchars($item['name']) ?></div>
+                    <a href="products-detail.php?id=<?= $item['id'] ?>" class="text-decoration-none text-dark">
+                        <img src="img/food/menu/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($item['name']) ?>">
+                        <div class="fw-medium mt-2"><?= htmlspecialchars($item['name']) ?></div>
+                    </a>
                     <div class="text-muted"><?= number_format($item['price'],0,',','.') ?> ₫</div>
+                    <button class="btn btn-primary btn-sm mt-2 add-to-cart" 
+                            data-id="<?= $item['id'] ?>" 
+                            data-name="<?= htmlspecialchars($item['name']) ?>" 
+                            data-price="<?= $item['price'] ?>"
+                            data-image="img/food/menu/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>">
+                        Thêm vào giỏ
+                    </button>
                 </div>
             </div>
         <?php endwhile; ?>
@@ -50,4 +59,5 @@ if($result_categories){
     </div>
 </div>
 
+<script src="js/cart.js"></script>
 <?php include 'includes/footer.php'; ?>
