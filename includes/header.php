@@ -1,6 +1,8 @@
 <?php
-include_once 'database/conf.php';
-//include_once 'modules/refreshToken.php';
+session_start();
+// __DIR__ là thư mục hiện tại (includes), /../ là lùi ra thư mục cha (web-order-php)
+include_once __DIR__ . '/../database/conf.php';
+// include_once __DIR__ . '/../modules/refreshToken.php';
 $token = $_COOKIE['auth_token'] ?? '';
 
 if ($token) {
@@ -19,6 +21,23 @@ if ($token) {
     }
 } else {
     $currentUser = null;
+}
+
+// Get cart count
+$cart_count = 0;
+if ($currentUser) {
+    $count_sql = "SELECT SUM(ci.quantity) as total_items 
+                  FROM cart c 
+                  JOIN cart_item ci ON c.id = ci.cartId 
+                  WHERE c.user_id = ? AND c.cartStatus = 'active'";
+    $count_stmt = $conn->prepare($count_sql);
+    $count_stmt->bind_param("i", $currentUser['id']);
+    $count_stmt->execute();
+    $count_result = $count_stmt->get_result();
+    if ($row = $count_result->fetch_assoc()) {
+        $cart_count = (int)($row['total_items'] ?? 0);
+    }
+    $count_stmt->close();
 }
 ?>
 
@@ -45,6 +64,7 @@ if ($token) {
                 <a href="./admin/index.php"><i class="bi bi-person-gear"></i>Admin</a>
             <?php endif; ?>
             <a href="./user-form.php"><i class="bi bi-person-circle"></i>Tài khoản</a>
+            <a href="./cart.php" class="text-decoration-none"><i class="bi bi-cart"></i> Giỏ hàng (<span id="cart-count"><?= $cart_count ?></span>)</a>
         <?php else: ?>
             <a href="./register-form.php"><i class="bi bi-person-plus"></i>Đăng ký</a>
             <a href="./login-form.php"><i class="bi bi-person-circle"></i>Đăng nhập</a>
