@@ -30,12 +30,29 @@ function showPassword() {
     var type = password.getAttribute('type');
 
     if(type === 'password'){
-        type = 'test';
+        type = 'text';
         password.setAttribute('type',type);
         togglePassword.innerHTML = '    Ẩn mật khẩu'
     }else{
         type = 'password';
         password.setAttribute('type',type);
         togglePassword.innerHTML = '    Hiển thị mật khẩu'
+    }
+}
+
+function confirmPassword() {
+    var toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    var confirmPassword = document.getElementById('confirmPassword');
+
+    var type = confirmPassword.getAttribute('type');
+
+    if(type === 'password'){
+        type = 'text';
+        confirmPassword.setAttribute('type',type);
+        toggleConfirmPassword.innerHTML = '    Ẩn mật khẩu'
+    }else{
+        type = 'password';
+        confirmPassword.setAttribute('type',type);
+        toggleConfirmPassword.innerHTML = '    Hiển thị mật khẩu'
     }
 }

@@ -1,0 +1,58 @@
+# -------------------------------------------------
+#   PHP + Composer Project Gitignore
+# -------------------------------------------------
+
+#config
+application_config.php
+
+# Composer vendor
+/vendor/
+
+# Composer lock (nếu bạn muốn giữ bản tự do)
+/composer.lock
+
+# Environment files
+.env
+.env.*
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs & temp files
+*.log
+*.cache
+*.tmp
+/tmp/
+.cache/
+logs/
+
+# PHPStorm cache
+/.phpunit.result.cache
+
+# Uploaded files (nếu có upload)
+uploads/*
+!uploads/.gitkeep
+
+# Sessions
+sessions/*
+
+# Cache folder (tùy dự án)
+cache/*
+
+# Backup files
+*.bak
+*.old
+
+# Misc generated files
+*.zip
+*.rar
+*.tar
+*.gz

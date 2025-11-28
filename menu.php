@@ -41,7 +41,7 @@ if($result_categories){
             <div class="col">
                 <div class="text-center">
                     <a href="products-detail.php?id=<?= $item['id'] ?>" class="text-decoration-none text-dark">
-                        <img src="img/food/menu/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($item['name']) ?>">
+                        <img src="images/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($item['name']) ?>">
                         <div class="fw-medium mt-2"><?= htmlspecialchars($item['name']) ?></div>
                     </a>
                     <div class="text-muted"><?= number_format($item['price'],0,',','.') ?> ₫</div>
@@ -49,7 +49,7 @@ if($result_categories){
                             data-id="<?= $item['id'] ?>" 
                             data-name="<?= htmlspecialchars($item['name']) ?>" 
                             data-price="<?= $item['price'] ?>"
-                            data-image="img/food/menu/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>">
+                            data-image="images/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>">
                         Thêm vào giỏ
                     </button>
                 </div>

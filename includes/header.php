@@ -2,7 +2,7 @@
 session_start();
 // __DIR__ là thư mục hiện tại (includes), /../ là lùi ra thư mục cha (web-order-php)
 include_once __DIR__ . '/../database/conf.php';
-// include_once __DIR__ . '/../modules/refreshToken.php';
+// include_once __DIR__ . '/../auth/refreshToken.php';
 $token = $_COOKIE['auth_token'] ?? '';
 
 if ($token) {
@@ -39,6 +39,12 @@ if ($currentUser) {
     }
     $count_stmt->close();
 }
+$name='';
+if($currentUser!=null){
+    $name = isset($currentUser['fullName']) ?
+        $name = $currentUser['fullName']:
+        $name =$currentUser['username'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -58,10 +64,10 @@ if ($currentUser) {
     <!-- Top bar user -->
     <div class="top-bar" id="user-header">
         <?php if(isset($currentUser)): ?>
-            <span>Xin chào, <?= htmlspecialchars($currentUser['username']) ?></span>
-            <a href="./modules/logout.php" id="logoutBtn"><i class="bi bi-box-arrow-right"></i>Đăng xuất</a>
-            <?php if($currentUser['role'] === 'admin'): ?>
-                <a href="./admin/index.php"><i class="bi bi-person-gear"></i>Admin</a>
+            <span>Xin chào, <?= htmlspecialchars($name) ?></span>
+            <a href="./auth/logout.php" id="logoutBtn"><i class="bi bi-box-arrow-right"></i>Đăng xuất</a>
+            <?php if($currentUser['role'] === 'admin' || $currentUser['role'] === 'manager'): ?>
+                <a href="./admin/index.php"><i class="bi bi-person-gear"></i>Quản lí</a>
             <?php endif; ?>
             <a href="./user-form.php"><i class="bi bi-person-circle"></i>Tài khoản</a>
             <a href="./cart.php" class="text-decoration-none"><i class="bi bi-cart"></i> Giỏ hàng (<span id="cart-count"><?= $cart_count ?></span>)</a>
@@ -86,8 +92,8 @@ if ($currentUser) {
                     <li class="nav-item">
                         <a class="nav-link" href="./menu.php">Thực Đơn</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./order.php">Order</a>
+                    <li>
+                        <a class="nav-link" href="./info.php">Thông tin</a>
                     </li>
                     </ul>
                 </div>
@@ -106,6 +112,9 @@ if ($currentUser) {
                         <li class="nav-item">
                             <a class="nav-link" href="./menu.php">Thực đơn</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./order.php">Order</a>
+                        </li>
                         <li>
                             <a class="nav-link" href="./info.php">Thông tin</a>
                         </li>
@@ -123,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
         logoutBtn.addEventListener("click", function (e) {
             e.preventDefault();
             if (confirm("Bạn có chắc muốn đăng xuất?")) {
-                window.location.href = "./modules/logout.php";
+                window.location.href = "./auth/logout.php";
             }
         });
     }

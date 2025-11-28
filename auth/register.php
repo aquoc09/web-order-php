@@ -1,11 +1,19 @@
 <?php
 include '../database/conf.php'; // Kết nối DB
+include '../function/validateValue.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirmPassword'] ?? '';
     $fullName = $_POST['fullName'] ?? '';
     $phone = $_POST['phone'] ?? '';
+    $email = $_POST['email'] ?? '';
+
+    //Kiểm tra giá trị
+    checkRegister($username,$password,$confirmPassword,$fullName,$phone,$email);
+
+
 
     $checkSql = "SELECT * FROM user WHERE username = ?";
     $stmtCheck = $conn->prepare($checkSql);
@@ -23,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     $default_role = 'user';
     // Thêm user mới vào database
-    $insertSql = "INSERT INTO user (username, password, fullName, phone, role) VALUES (?, ?, ?, ?, ?)";
+    $insertSql = "INSERT INTO user (username, password, fullName, phone, email, role) VALUES (?, ?, ?, ?, ?, ?)";
     $stmtInsert = $conn->prepare($insertSql);
-    $stmtInsert->bind_param("sssss", $username, $hashedPassword, $fullName, $phone, $default_role);
+    $stmtInsert->bind_param("ssssss", $username, $hashedPassword, $fullName, $phone, $email, $default_role);
 
     if ($stmtInsert->execute()) {
         // Redirect về trang index hoặc dashboard

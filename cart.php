@@ -72,7 +72,7 @@ $stmt->close();
                     <?php foreach ($cart_items as $item): ?>
                         <tr data-product-id="<?= $item['product_id'] ?>">
                             <td>
-                                <img src="img/food/menu/<?= htmlspecialchars($item['categoryCode']) ?>/<?= htmlspecialchars($item['productImage']) ?>" 
+                                <img src="images/<?= htmlspecialchars($item['categoryCode']) ?>/<?= htmlspecialchars($item['productImage']) ?>" 
                                      class="img-fluid rounded" 
                                      alt="<?= htmlspecialchars($item['name']) ?>"
                                      style="width: 100px; height: 100px; object-fit: cover;">

@@ -42,7 +42,7 @@ if (!$product) {
 <div class="container py-4">
     <div class="row">
         <div class="col-md-6">
-            <img src="img/food/menu/<?= $product['categoryCode'] ?>/<?= $product['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($product['name']) ?>">
+            <img src="images/<?= $product['categoryCode'] ?>/<?= $product['productImage'] ?>" class="img-fluid rounded" alt="<?= htmlspecialchars($product['name']) ?>">
         </div>
         <div class="col-md-6">
             <h2><?= htmlspecialchars($product['name']) ?></h2>

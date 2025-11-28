@@ -1,10 +1,13 @@
 <?php
-include 'generateToken.php';
+include '../function/generateToken.php';
+include '../function/validateValue.php';
 include '../database/conf.php'; // Kết nối DB
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
+
+    checkLogin($username, $password);
 
     $sql = "SELECT * FROM user WHERE username = ?";
     $stmt = $conn->prepare($sql);
@@ -38,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Gửi token về browser bằng cookie
             setcookie("auth_token", $token, time() + 86400, "/", "", false, true); // httponly = true
 
-            header("Location: ../index.php");
+            header("Location: ../index.php?message=Đăng nhập thành công");
             exit;
         } else {
             $error = "Sai mật khẩu";
