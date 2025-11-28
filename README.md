@@ -1,6 +1,6 @@
 # web-order-php
 
-Dự án PHP sử dụng Composer để quản lý thư viện.
+Dự án PHP sử dụng Composer để quản lý web order.
 
 ## Yêu cầu hệ thống
 - PHP >= 8.1
