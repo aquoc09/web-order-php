@@ -50,6 +50,9 @@ $result = $conn->query($sql);
                                 <button class="btn btn-primary btn-edit" data-id="<?= $row['id'] ?>" data-bs-toggle="modal" data-bs-target="#editModal">
                                     Sửa
                                 </button>
+                                <button class="btn btn-danger btn-delete" data-id="<?= $row['id'] ?>">
+                                    Xóa
+                                </button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -120,6 +123,41 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
         .catch(err => {
             alert("Lỗi tải dữ liệu!");
             console.log(err);
+        });
+    });
+});
+</script>
+<script>
+// --- XÓA LOẠI ---
+document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function () {
+
+        let id = this.dataset.id;
+
+        if (!confirm("Bạn có chắc muốn xóa loại này? Hành động này không thể hoàn tác!")) {
+            return;
+        }
+
+        // Gửi request xóa bằng fetch
+        fetch("modules/deleteCategory.php?id=" + id, {
+            method: "GET"
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert("Đã xóa loại thành công!");
+
+                // Xóa dòng khỏi bảng mà không cần reload trang
+                let row = document.querySelector(`tr[data-id='${id}']`);
+                if (row) row.remove();
+
+            } else {
+                alert("Xóa thất bại: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            alert("Lỗi kết nối khi xóa!");
         });
     });
 });
