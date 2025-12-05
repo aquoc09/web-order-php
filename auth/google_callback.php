@@ -1,5 +1,6 @@
 <?php
-require '../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
+
 include '../function/generateToken.php';
 include '../repository/userRepository.php';
 include '../database/conf.php';
