@@ -3,14 +3,8 @@ FROM php:8.2-apache
 # Enable Apache rewrite
 RUN a2enmod rewrite
 
-# Install system packages: unzip + git
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install required PHP extensions (zip included)
-RUN docker-php-ext-install mysqli pdo pdo_mysql zip
+# Install PHP extensions
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
 # Copy composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -18,12 +12,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy project files
 COPY . /var/www/html/
 
+# Set working dir
 WORKDIR /var/www/html/
 
-# Install composer packages
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install composer packages (if vendor/ exists, this will skip)
+RUN composer install --no-dev --optimize-autoloader || true
 
-# Permission
+# Set permission
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
