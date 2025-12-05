@@ -1,24 +1,32 @@
 FROM php:8.2-apache
 
-# Enable Apache rewrite
+# Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# Install PHP extensions
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Install system dependencies for Composer + PHP zip extension
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    zlib1g-dev \
+    libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy composer from official image
+# Install PHP extensions
+RUN docker-php-ext-install mysqli pdo pdo_mysql zip
+
+# Copy composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy project files
+# Copy app source
 COPY . /var/www/html/
 
-# Set working dir
 WORKDIR /var/www/html/
 
-# Install composer packages (if vendor/ exists, this will skip)
-RUN composer install --no-dev --optimize-autoloader || true
+# Install composer packages
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
-# Set permission
+# Permissions
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
+
