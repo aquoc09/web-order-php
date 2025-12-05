@@ -1,9 +1,6 @@
 .git
 .gitignore
-vendor/
 node_modules/
 README.md
 Dockerfile
-composer.lock
-composer.json
 *.log
