@@ -3,4 +3,5 @@
 node_modules/
 README.md
 Dockerfile
+vendor/
 *.log
