@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Kiểm tra email tồn tại
-    $stmt = $conn->prepare("SELECT id FROM users WHERE email=? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id FROM user WHERE email=? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $rs = $stmt->get_result();
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
 
     // Cập nhật DB
-    $update = $conn->prepare("UPDATE users SET password=? WHERE email=?");
+    $update = $conn->prepare("UPDATE user SET password=? WHERE email=?");
     $update->bind_param("ss", $hashed, $email);
     $update->execute();
 
