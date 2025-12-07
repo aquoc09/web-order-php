@@ -4,22 +4,23 @@ require __DIR__ . '/../vendor/autoload.php';
 function sendMailGmail($to, $subject, $bodyHtml)
 {
     $client = new Google\Client();
-    $client->setAuthConfig(__DIR__ . '/../auth/credentials.json');
+    $client->setClientId(getenv('GOOGLE_CLIENT_ID_MAIL'));
+    $client->setClientSecret(getenv('GOOGLE_CLIENT_SECRET_MAIL'));
+    $client->setRedirectUri(getenv('GOOGLE_REDIRECT_URI_MAIL'));
+
     $client->addScope(Google\Service\Gmail::GMAIL_SEND);
     $client->setAccessType('offline');
 
-    // Load access token
-    $client->setAccessToken(json_decode(file_get_contents(__DIR__ . '/../auth/token.json'), true));
+    // Lấy refresh token từ Railway
+    $refreshToken = getenv('GMAIL_REFRESH_TOKEN');
 
-    // Auto refresh nếu token hết hạn
-    if ($client->isAccessTokenExpired()) {
-        $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-        file_put_contents(__DIR__ . '/../auth/token.json', json_encode($client->getAccessToken()));
-    }
+    // Cấp access token mới từ refresh token
+    $accessToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+    $client->setAccessToken($accessToken);
 
     $service = new Google\Service\Gmail($client);
 
-    // Raw email theo chuẩn RFC 2822
+    // Raw email theo RFC 2822
     $rawMessageString =
         "From: PQ Restaurant <your-email@gmail.com>\r\n" .
         "To: <$to>\r\n" .
@@ -35,5 +36,3 @@ function sendMailGmail($to, $subject, $bodyHtml)
 
     return $service->users_messages->send("me", $message);
 }
-
-?>
