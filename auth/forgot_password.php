@@ -1,10 +1,7 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../database/conf.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\OAuth;
-use League\OAuth2\Client\Provider\Google;
+require __DIR__ . '/../function/sendMailGmailApi.php'; // file có hàm sendMailGmail()
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
@@ -13,71 +10,41 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit("Vui lòng nhập email!");
     }
 
-    // Check user tồn tại
-    $stmt = $conn->prepare("SELECT id FROM user WHERE email=? LIMIT 1");
+    // Kiểm tra email tồn tại
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email=? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $rs = $stmt->get_result();
 
     if ($rs->num_rows === 0) {
-        exit("Email không tồn tại trong hệ thống!");
+        exit("Email không tồn tại!");
     }
 
-    // Tạo mật khẩu ngẫu nhiên 8 số
+    // Tạo mật khẩu mới 8 số
     $newPassword = str_pad(random_int(0, 99999999), 8, "0", STR_PAD_LEFT);
 
-    // Hash mật khẩu
-    $hashedPass = password_hash($newPassword, PASSWORD_BCRYPT);
+    // Mã hoá mật khẩu
+    $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
 
     // Cập nhật DB
-    $update = $conn->prepare("UPDATE user SET password=? WHERE email=?");
-    $update->bind_param("ss", $hashedPass, $email);
+    $update = $conn->prepare("UPDATE users SET password=? WHERE email=?");
+    $update->bind_param("ss", $hashed, $email);
     $update->execute();
 
-    // Gửi mail bằng Gmail API (OAuth2)
+    // Gửi email bằng Gmail API
+    $subject = "Mật khẩu mới của bạn";
+    $body = "
+        Chào bạn,<br><br>
+        Mật khẩu mới của bạn là: <b>$newPassword</b><br><br>
+        Vui lòng đăng nhập và đổi mật khẩu ngay.<br><br>
+        Trân trọng,<br>
+        PQ Restaurant
+    ";
+
     try {
-        $mail = new PHPMailer(true);
-
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->Port       = 587;
-        $mail->SMTPSecure = 'tls';
-        $mail->SMTPAuth   = true;
-
-        $mail->AuthType = 'XOAUTH2';
-        $provider = new Google([
-            'clientId'     => getenv('GOOGLE_CLIENT_ID_MAIL'),
-            'clientSecret' => getenv('GOOGLE_CLIENT_SECRET_MAIL'),
-        ]);
-
-        $mail->setOAuth(new OAuth([
-            'provider'        => $provider,
-            'clientId'        => getenv('GOOGLE_CLIENT_ID_MAIL'),
-            'clientSecret'    => getenv('GOOGLE_CLIENT_SECRET_MAIL'),
-            'refreshToken'    => getenv('GOOGLE_REFRESH_TOKEN'),
-            'userName'        => getenv('MAIL_SENDER'),
-        ]));
-
-        // Sender & Receiver
-        $mail->setFrom(getenv('MAIL_SENDER'), "PQ Restaurant");
-        $mail->addAddress($email);
-
-        // Nội dung email
-        $mail->isHTML(true);
-        $mail->Subject = "Mật khẩu mới của bạn";
-        $mail->Body = "
-            Chào bạn,<br><br>
-            Mật khẩu mới của bạn là: <b>$newPassword</b><br><br>
-            Hãy đăng nhập và đổi mật khẩu ngay để đảm bảo bảo mật.<br><br>
-            Trân trọng.
-        ";
-
-        $mail->send();
-
+        sendMailGmail($email, $subject, $body);
         echo "Mật khẩu mới đã được gửi tới email của bạn!";
-
     } catch (Exception $e) {
-        echo "Không thể gửi email. Lỗi: {$mail->ErrorInfo}";
+        echo "Không thể gửi email: " . $e->getMessage();
     }
 }
-?>
