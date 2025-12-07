@@ -34,17 +34,27 @@ $user = findUserByGoogleId($googleAccountId, $conn);
 if($user!=null){
     $user = findUserByEmail($email, $conn);
 }else{
-    $user_tmp = [
-        'fullName' => $name,
-        'email' => $email,
-        'googleAccountId' => $googleAccountId,
-        'password' => null,
-        'username' => null,
-        'active' => 1,
-        'role' => 'USER'
-    ];
-    createUser($user_tmp, $conn);
-    $user = findUserByGoogleId($googleAccountId, $conn);
+    // Tìm theo email
+    $userByEmail = findUserByEmail($email, $conn);
+
+    if ($userByEmail != null) {
+        // TH2: Email tồn tại nhưng chưa có googleAccountId
+        updateGoogleId($userByEmail['id'], $googleAccountId, $conn);
+        $user = findUserByGoogleId($googleAccountId, $conn); 
+    } else {
+        // TH3: Email chưa tồn tại → tạo user mới
+        $user_tmp = [
+            'fullName' => $name,
+            'email' => $email,
+            'googleAccountId' => $googleAccountId,
+            'password' => null,
+            'username' => null,
+            'active' => 1,
+            'role' => 'USER'
+        ];
+        createUser($user_tmp, $conn);
+        $user = findUserByGoogleId($googleAccountId, $conn);
+    }
 }
 
 $token = generateToken($conn, $user['id']);

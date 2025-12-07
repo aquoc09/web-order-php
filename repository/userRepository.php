@@ -70,4 +70,11 @@ function findUserByEmail($email, $conn){
     }
     return null;
 }
+
+function updateGoogleId($userId, $googleAccountId, $conn){
+    $stmt = $conn->prepare("UPDATE user SET googleAccountId = ? WHERE id = ?");
+    $stmt->bind_param("si", $googleAccountId, $userId);
+    return $stmt->execute();
+}
+
 ?>
