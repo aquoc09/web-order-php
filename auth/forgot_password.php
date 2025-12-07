@@ -21,7 +21,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Tạo mật khẩu mới 8 số
-    $newPassword = str_pad(random_int(0, 99999999), 8, "0", STR_PAD_LEFT);
+    $chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+    $newPassword = substr(str_shuffle($chars), 0, 8);
 
     // Mã hoá mật khẩu
     $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
@@ -32,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $update->execute();
 
     // Gửi email bằng Gmail API
-    $subject = "Mật khẩu mới của bạn";
+    $subject = "RESET PASSWORD PQ RESTAURANT";
     $body = "
         Chào bạn,<br><br>
         Mật khẩu mới của bạn là: <b>$newPassword</b><br><br>
@@ -43,8 +44,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     try {
         sendMailGmail($email, $subject, $body);
-        echo "Mật khẩu mới đã được gửi tới email của bạn!";
+        header("Location: ../login-form.php?message='Đã gửi email thành công cho $email'");
+        exit;
     } catch (Exception $e) {
-        echo "Không thể gửi email: " . $e->getMessage();
+        header("Location: ../login-form.php?message='Gửi mail thất bại");
+        exit;
     }
 }
