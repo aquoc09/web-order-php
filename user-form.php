@@ -91,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <textarea class="form-control" id="address" name="address" rows="3"><?= htmlspecialchars($currentUser['address'] ?? '') ?></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Cập nhật thông tin</button>
+                        <a href="change-password.php" class="btn btn-secondary w-100 mt-2">Đổi mật khẩu</a>
                     </form>
                 </div>
             </div>
