@@ -1,7 +1,27 @@
 <?
 session_start();
 //include '../includes/header.php';
-include '../function/order_helper.php'; // Include the new helper
+include __DIR__ . '/../function/order_helper.php'; // Include the new helper
+include_once __DIR__ . '/../database/conf.php';
+$token = $_COOKIE['auth_token'] ?? '';
+
+if ($token) {
+    $sql = "SELECT u.* FROM user_tokens t 
+            JOIN user u ON u.id = t.user_id
+            WHERE t.token = ? AND t.expires_at > NOW()";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 1) {
+        $currentUser = $result->fetch_assoc();
+    } else {
+        $currentUser = null;
+    }
+} else {
+    $currentUser = null;
+}
 
 // Check if user is logged in
 if (!$currentUser) {
