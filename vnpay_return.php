@@ -61,7 +61,7 @@ $vnp_PayDate = $_GET['vnp_PayDate'] ?? ''; // Thời gian thanh toán
                         $conn->begin_transaction();
                         try {
                             // Update order status
-                            $update_sql = "UPDATE `order` SET `status` = 'pending' WHERE `id` = ?";
+                            $update_sql = "UPDATE `order` SET `status` = 'paid' WHERE `id` = ?";
                             $stmt_update = $conn->prepare($update_sql);
                             $stmt_update->bind_param("i", $vnp_TxnRef);
                             $stmt_update->execute();
