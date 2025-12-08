@@ -1,6 +1,6 @@
 <?php
-include_once 'includes/header.php';
-include_once 'database/conf.php';
+include_once './includes/header.php';
+include_once './database/conf.php';
 
 // Check if user is logged in
 if (!$currentUser) {
@@ -74,12 +74,16 @@ $stmt->close();
                         Thanh toán khi nhận hàng (COD)
                     </label>
                 </div>
-                <!-- Add other payment methods here if available -->
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="vnpay">
+                    <label class="form-check-label" for="vnpay">
+                        Thanh toán qua VNPAY
+                    </label>
+                </div>
 
                 <hr class="my-4">
-
-                <button type="submit" class="btn btn-primary w-100">Đặt hàng</button>
-            </form>
+                <input type="hidden" name="total" value="<?php echo $total_price; ?>">
+                <button type="submit" class="btn btn-primary w-100" name="redirect">Đặt hàng</button>
         </div>
         <div class="col-md-5">
             <h4>Đơn hàng của bạn</h4>
@@ -102,5 +106,8 @@ $stmt->close();
         </div>
     </div>
 </div>
+
+
+
 
 <?php include 'includes/footer.php'; ?>
