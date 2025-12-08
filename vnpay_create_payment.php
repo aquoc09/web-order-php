@@ -1,7 +1,7 @@
 <?php
 session_start();
 include_once 'database/conf.php';
-include_once 'includes/utils.php';
+//include_once 'includes/utils.php';
 require_once 'auth/vnpay_config.php';
 
 // Check if order_id is in session
