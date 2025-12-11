@@ -20,10 +20,10 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                     <div class="nav-item-title">CHUNG</div>
                     <ul class="item-group list-unstyled">
 
-                        <li class="nav-item <?= ($mod=='general' && $ac=='dashboard') ? 'active' : '' ?>">
-                            <a href="index.php?mod=general&ac=dashboard">
+                        <li class="nav-item <?= ($mod=='general' && $ac=='revenues') ? 'active' : '' ?>">
+                            <a href="index.php?mod=general&ac=revenues">
                                 <i class="bi bi-speedometer2"></i>
-                                Dashboard
+                                Doanh thu
                             </a>
                         </li>
 
