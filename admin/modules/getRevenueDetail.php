@@ -1,5 +1,5 @@
 <?php
-require_once "../database/conf.php";
+require_once __DIR__ . '/../../database/conf.php';
 
 if (!isset($_GET['date'])) {
     echo json_encode([]);
