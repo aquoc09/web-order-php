@@ -20,7 +20,6 @@ if (!defined("ROOT"))
                     include 'home.php';
                     return;
                 }
-                if($ac == 'revenues') include 'general/revenues.php';
                 if($ac == 'categories') include 'general/categories.php';
                 if($ac == 'products') include 'general/products.php';
                 if($ac == 'users') include 'general/users.php';
@@ -30,6 +29,7 @@ if (!defined("ROOT"))
                     include 'home.php';
                     return;
                 }
+                if($ac == 'revenues') include 'manage/revenues.php';
                 if($ac == 'products') include 'manage/products.php';
                 if($ac == 'categories') include 'manage/categories.php';
                 if($ac == 'orders') include 'manage/orders.php';

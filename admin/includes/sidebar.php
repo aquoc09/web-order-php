@@ -19,14 +19,6 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                 <li class="root-nav-item">
                     <div class="nav-item-title">CHUNG</div>
                     <ul class="item-group list-unstyled">
-
-                        <li class="nav-item <?= ($mod=='general' && $ac=='revenues') ? 'active' : '' ?>">
-                            <a href="index.php?mod=general&ac=revenues">
-                                <i class="bi bi-speedometer2"></i>
-                                Doanh thu
-                            </a>
-                        </li>
-
                         <li class="nav-item <?= ($mod=='general' && $ac=='products') ? 'active' : '' ?>">
                             <a href="index.php?mod=general&ac=products">
                                 <i class="bi bi-plus-square"></i>
@@ -57,6 +49,13 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                 <li class="root-nav-item">
                     <div class="nav-item-title">QUẢN LÍ</div>
                     <ul class="item-group list-unstyled">
+
+                        <li class="nav-item <?= ($mod=='manage' && $ac=='revenues') ? 'active' : '' ?>">
+                            <a href="index.php?mod=manage&ac=revenues">
+                                <i class="bi bi-speedometer2"></i>
+                                Doanh thu
+                            </a>
+                        </li>
 
                         <li class="nav-item <?= ($mod=='manage' && $ac=='products') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=products">
