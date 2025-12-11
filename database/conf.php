@@ -27,9 +27,9 @@
 //     return $conn->real_escape_string($str);
 // }
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// if (session_status() == PHP_SESSION_NONE) {
+//     session_start();
+// }
 
 $host = getenv("DB_HOST") ?: "localhost";
 $user = getenv("DB_USER") ?: "root";
