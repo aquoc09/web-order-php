@@ -32,7 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $fileTmp = $_FILES['avatar']['tmp_name'];
-            $fileName = time() . '_' . basename($_FILES['avatar']['name']);
+            
+            $username = preg_replace('/[^a-zA-Z0-9_\-]/', '', $currentUser['username']); // tránh ký tự lạ
+            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+            $fileName = $username . '_' . time() . '.' . $ext;
+
+
             $targetDir = __DIR__ . '/images/users/';
             $targetPath = $targetDir . $fileName;
 
