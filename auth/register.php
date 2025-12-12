@@ -31,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     $default_role = 'user';
     // Thêm user mới vào database
-    $insertSql = "INSERT INTO user (username, password, fullName, phone, email, role) VALUES (?, ?, ?, ?, ?, ?)";
+    $insertSql = "INSERT INTO user (username, password, fullName, phone, email, role, createdAt) VALUES (?, ?, ?, ?, ?, ?, NOW())";
     $stmtInsert = $conn->prepare($insertSql);
     $stmtInsert->bind_param("ssssss", $username, $hashedPassword, $fullName, $phone, $email, $default_role);
 
     if ($stmtInsert->execute()) {
         // Redirect về trang index hoặc dashboard
-        header("Location: ../index.php");
+        header("Location: ../login-form.php");
         exit;
     } else {
         $error = urlencode("Đăng ký thất bại. Vui lòng thử lại");

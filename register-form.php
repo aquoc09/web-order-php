@@ -5,8 +5,8 @@
     $errorName = $_GET['errorName']??'';
     $errorPhone = $_GET['errorPhone']??'';
     $errorEmail = $_GET['errorEmail']??'';
+    include 'includes/header.php';
 ?>
-<?php include 'includes/header.php';?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

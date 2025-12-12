@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         // Cập nhật thông tin người dùng vào database
-        $update_sql = "UPDATE user SET fullName = ?, email = ?, phone = ?, address = ?, updateAt = NOW() WHERE id = ?";
+        $update_sql = "UPDATE user SET fullName = ?, email = ?, phone = ?, address = ?, updatedAt = NOW() WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("ssssi", $fullName, $email, $phone, $address, $userId);
 
