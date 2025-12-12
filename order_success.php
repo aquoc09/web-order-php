@@ -1,30 +1,54 @@
 <?php
 include_once 'includes/header.php';
 
-// Lấy order_id từ URL
+// Get order_id from URL
 $order_id = $_GET['order_id'] ?? null;
+$order = null;
 $order_items = [];
-$total_amount = 0;
+$applied_coupons = [];
+$original_amount = 0;
+$final_amount = 0;
 
-// Nếu có order_id, truy vấn CSDL để lấy chi tiết đơn hàng
+// If there is an order_id, query the database to get the order details
 if ($order_id) {
-    // Truy vấn chi tiết các món trong đơn hàng
+    // 1. Fetch the main order record to get the final total
+    $order_sql = "SELECT totalMoney FROM `order` WHERE id = ?";
+    $order_stmt = $conn->prepare($order_sql);
+    $order_stmt->bind_param("i", $order_id);
+    $order_stmt->execute();
+    $order_result = $order_stmt->get_result();
+    if ($order_result->num_rows > 0) {
+        $order = $order_result->fetch_assoc();
+        $final_amount = $order['totalMoney'];
+    }
+    $order_stmt->close();
+
+    // 2. Query the details of the items in the order
     $details_sql = "
         SELECT p.name, od.numOfProducts as quantity, p.price
         FROM order_detail od
         JOIN product p ON od.product_id = p.id
         WHERE od.order_id = ?
     ";
-    $stmt = $conn->prepare($details_sql);
-    $stmt->bind_param("i", $order_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $order_items = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    $details_stmt = $conn->prepare($details_sql);
+    $details_stmt->bind_param("i", $order_id);
+    $details_stmt->execute();
+    $details_result = $details_stmt->get_result();
+    $order_items = $details_result->fetch_all(MYSQLI_ASSOC);
+    $details_stmt->close();
 
-    // Tính tổng số tiền
+    // 3. Fetch applied coupons
+    $coupons_sql = "SELECT coupon_code, discount_amount FROM order_coupon WHERE order_id = ?";
+    $coupons_stmt = $conn->prepare($coupons_sql);
+    $coupons_stmt->bind_param("i", $order_id);
+    $coupons_stmt->execute();
+    $coupons_result = $coupons_stmt->get_result();
+    $applied_coupons = $coupons_result->fetch_all(MYSQLI_ASSOC);
+    $coupons_stmt->close();
+
+    // 4. Calculate the original total amount (subtotal)
     foreach ($order_items as $item) {
-        $total_amount += $item['quantity'] * $item['price'];
+        $original_amount += $item['quantity'] * $item['price'];
     }
 }
 ?>
@@ -49,9 +73,24 @@ if ($order_id) {
                                     <span><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?> VNĐ</span>
                                 </li>
                             <?php endforeach; ?>
+                            
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Tạm tính
+                                <span><?php echo number_format($original_amount, 0, ',', '.'); ?> VNĐ</span>
+                            </li>
+                            
+                            <?php if (!empty($applied_coupons)) : ?>
+                                <?php foreach ($applied_coupons as $coupon) : ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center text-success">
+                                    <span>Giảm giá (<strong><?php echo htmlspecialchars($coupon['coupon_code']); ?></strong>)</span>
+                                    <span>-<?php echo number_format($coupon['discount_amount'], 0, ',', '.'); ?> VNĐ</span>
+                                </li>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
                             <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
-                                Tổng cộng:
-                                <span><?php echo number_format($total_amount, 0, ',', '.'); ?> VNĐ</span>
+                                Tổng cộng
+                                <span><?php echo number_format($final_amount, 0, ',', '.'); ?> VNĐ</span>
                             </li>
                         </ul>
                     </div>

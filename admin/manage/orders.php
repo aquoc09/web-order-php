@@ -158,60 +158,102 @@ document.querySelectorAll('.btn-view').forEach(btn => {
 </script>
 
 <!-- Modal order detail -->
- <div class="modal fade" id="detailModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Chi tiết Order</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-            <table class="table table-bordered" id="detail-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Món</th>
-                        <th>SL</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Content will be injected by JavaScript -->
+            </div>
         </div>
     </div>
-  </div>
 </div>
 
 <script>
-document.querySelectorAll('.btn-detail').forEach(btn => {
-    btn.addEventListener('click', function () {
+    document.querySelectorAll('.btn-detail').forEach(btn => {
+        btn.addEventListener('click', function() {
+            let id = this.dataset.id;
+            let modalBody = document.getElementById('detailModalBody');
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
-        let id = this.dataset.id;
+            fetch("modules/getOrderDetail.php?order_id=" + id)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const { products, coupons } = data;
 
-        fetch("modules/getOrderDetail.php?order_id=" + id)
-        .then(res => res.json())
-        .then(rows => {
-            let tbody = document.querySelector("#detail-table tbody");
-            tbody.innerHTML = "";
+                    let productHtml = '<h6>Các sản phẩm</h6>';
+                    if (products && products.length > 0) {
+                        productHtml += `
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Món</th>
+                                        <th>SL</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                        let subtotal = 0;
+                        products.forEach(p => {
+                            let imgPath = `../images/${p.categoryCode}/${p.productImage}`;
+                            subtotal += parseFloat(p.totalMoney);
+                            productHtml += `
+                                <tr>
+                                    <td>${p.id}</td>
+                                    <td>
+                                        <img src="${imgPath}" style="width:50px; height:50px; object-fit:cover; border:1px solid #ccc;" onerror="this.src='../img/logo/logo40x40.png'">
+                                        ${p.productName}
+                                    </td>
+                                    <td>${p.numOfProducts}</td>
+                                    <td>${new Intl.NumberFormat('vi-VN').format(p.totalMoney)} đ</td>
+                                </tr>`;
+                        });
+                        productHtml += '</tbody></table>';
+                        
+                        let couponHtml = '<h6>Các mã ưu đãi</h6>';
+                        let totalDiscount = 0;
+                        if (coupons && coupons.length > 0) {
+                            couponHtml += `
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã ưu đãi</th>
+                                            <th>Giá tiền đã giảm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+                            coupons.forEach(coupon => {
+                                totalDiscount += parseFloat(coupon.discount_amount);
+                                couponHtml += `
+                                    <tr>
+                                        <td>${coupon.coupon_code}</td>
+                                        <td>-${new Intl.NumberFormat('vi-VN').format(coupon.discount_amount)} đ</td>
+                                    </tr>`;
+                            });
+                            couponHtml += '</tbody></table>';
+                        } else {
+                            couponHtml += '<p>Không có mã ưu đãi nào được áp dụng.</p>';
+                        }
 
-            rows.forEach(r => {
-                let imgPath = "../images/" + r.categoryCode + "/" + r.productImage;
+                        modalBody.innerHTML = productHtml + couponHtml;
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${r.id}</td>
-                        <td>
-                            <img src="${imgPath}" style="width:50px; height:50px; object-fit:cover; border:1px solid #ccc;">
-                            ${r.productName}
-                        </td>
-                        <td>${r.numOfProducts}</td>
-                        <td>${r.totalMoney}</td>
-                    </tr>
-                `;
-            });
+                    } else {
+                         modalBody.innerHTML = "<p>Không có sản phẩm trong đơn hàng này.</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+                    modalBody.innerHTML = "<div class='alert alert-danger'>Đã có lỗi xảy ra khi tải chi tiết đơn hàng. Vui lòng thử lại.</div>";
+                });
         });
     });
-});
-
 </script>

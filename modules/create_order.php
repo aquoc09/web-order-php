@@ -41,15 +41,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: ../checkout.php?error=Giỏ hàng của bạn đang trống.");
         exit;
     }
+    
+    // --- Securely re-validate coupons and calculate final price ---
+    $totalDiscount = 0;
+    $valid_coupons = [];
+    $finalTotal = $totalMoney;
+
+    if (isset($_SESSION['applied_coupons']) && is_array($_SESSION['applied_coupons'])) {
+        // Check if user has changed
+        if (isset($_SESSION['coupon_user_id']) && $_SESSION['coupon_user_id'] !== $userId) {
+            unset($_SESSION['applied_coupons']);
+            unset($_SESSION['coupon_user_id']);
+        } else {
+            // Re-validate each coupon
+            foreach ($_SESSION['applied_coupons'] as $coupon_in_session) {
+                $sql_coupon = "SELECT * FROM coupon WHERE code = ? AND active = 1";
+                $stmt_coupon = $conn->prepare($sql_coupon);
+                $stmt_coupon->bind_param("s", $coupon_in_session['code']);
+                $stmt_coupon->execute();
+                $result_coupon = $stmt_coupon->get_result();
+
+                if ($coupon_db = $result_coupon->fetch_assoc()) {
+                    if ($totalMoney >= $coupon_db['conditionAmount']) {
+                        $discountAmount = ($totalMoney * floatval($coupon_db['discountAmount'])) / 100;
+                        $valid_coupons[] = [
+                            'code' => $coupon_db['code'],
+                            'discount_amount' => $discountAmount
+                        ];
+                        $totalDiscount += $discountAmount;
+                    }
+                }
+                $stmt_coupon->close();
+            }
+        }
+    }
+    
+    $finalTotal = $totalMoney - $totalDiscount;
 
     // --- Handle payment method ---
     if ($paymentMethod === 'cod') {
         // For COD, create order, details, and clear cart immediately.
-        $orderId = create_order_and_details($conn, $userId, $address, $note, $totalMoney, 'cod', 'pending');
+        $orderId = create_order_and_details($conn, $userId, $address, $note, $finalTotal, 'cod', 'pending', $valid_coupons);
         
         if ($orderId) {
-            // Clear the cart after successful order creation
+            // Clear the cart and coupon session data after successful order creation
             clear_cart($conn, $userId);
+            unset($_SESSION['applied_coupons']);
+            unset($_SESSION['coupon_user_id']);
             header("Location: ../order_success.php?order_id=" . $orderId);
             exit;
         } else {
@@ -59,8 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($paymentMethod === 'vnpay') {
         // For VNPAY, create a 'pending_payment' order first.
-        // The cart will be cleared in vnpay_return.php after successful payment.
-        $orderId = create_order_and_details($conn, $userId, $address, $note, $totalMoney, 'vnpay', 'pending');
+        $orderId = create_order_and_details($conn, $userId, $address, $note, $finalTotal, 'vnpay', 'paid', $valid_coupons);
 
         if ($orderId) {
             $_SESSION['order_id_for_vnpay'] = $orderId;

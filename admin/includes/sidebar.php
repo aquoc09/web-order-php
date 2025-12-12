@@ -48,6 +48,13 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                             </a>
                         </li>
 
+                        <li class="nav-item <?= ($mod=='general' && $ac=='coupons') ? 'active' : '' ?>">
+                            <a href="index.php?mod=general&ac=coupons">
+                                <i class="bi bi-plus-square"></i>
+                                Thêm ưu đãi
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
             </ul>
@@ -83,6 +90,13 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                             <a href="index.php?mod=manage&ac=users">
                                 <i class="bi bi-people"></i>
                                 Users
+                            </a>
+                        </li>
+
+                        <li class="nav-item <?= ($mod=='manage' && $ac=='coupons') ? 'active' : '' ?>">
+                            <a href="index.php?mod=manage&ac=coupons">
+                                <i class="bi bi-gift"></i>
+                                Coupons
                             </a>
                         </li>
 

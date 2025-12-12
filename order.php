@@ -52,7 +52,43 @@ $user_id = $currentUser['id'];
                     <p><strong>Trạng thái:</strong> <?php echo $order['status']; ?></p>
                     <p><strong>Địa chỉ giao hàng:</strong> <?php echo $order['address']; ?></p>
                     <p><strong>Ghi chú:</strong> <?php echo $order['note']; ?></p>
-                    <p><strong>Tổng tiền:</strong> <?php echo number_format($order['totalMoney'], 0, ',', '.'); ?> VNĐ</p>
+
+                    <?php
+                    // Fetch coupon details
+                    $coupon_sql = "
+                        SELECT c.code, oc.discount_amount
+                        FROM order_coupon oc
+                        JOIN coupon c ON oc.coupon_code = c.code
+                        WHERE oc.order_id = ?";
+                    $stmt_coupon = $conn->prepare($coupon_sql);
+                    $stmt_coupon->bind_param("i", $order_id);
+                    $stmt_coupon->execute();
+                    $coupon_result = $stmt_coupon->get_result();
+
+                    // Calculate subtotal
+                    $subtotal = 0;
+                    $order_detail_result->data_seek(0); // Reset pointer
+                    while ($item = $order_detail_result->fetch_assoc()) {
+                        $subtotal += $item['totalMoney'];
+                    }
+                    $order_detail_result->data_seek(0); // Reset pointer again for displaying items
+
+                    ?>
+                    <p><strong>Tổng tiền sản phẩm:</strong> <?php echo number_format($subtotal, 0, ',', '.'); ?> VNĐ</p>
+                    
+                    <?php
+                    if ($coupon_result->num_rows > 0) {
+                        echo "<p><strong>Mã giảm giá đã áp dụng:</strong></p>";
+                        echo "<ul>";
+                        while ($coupon = $coupon_result->fetch_assoc()) {
+                            $discount = number_format($coupon['discount_amount'], 0, ',', '.') . ' VNĐ';
+                            echo "<li>" . htmlspecialchars($coupon['code']) . " (-" . $discount . ")</li>";
+                        }
+                        echo "</ul>";
+                    }
+                    ?>
+
+                    <p><strong>Tổng cộng:</strong> <?php echo number_format($order['totalMoney'], 0, ',', '.'); ?> VNĐ</p>
 
                     <h5 class="mt-4">Các sản phẩm đã đặt:</h5>
                     <table class="table table-bordered">

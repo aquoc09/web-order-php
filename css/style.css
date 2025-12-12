@@ -277,6 +277,12 @@ html, body{
     background: #e74c3c;
 }
 
+.coupon-card {
+    border: 2px dashed #febd59;
+    background-color: #fff;
+    border-radius: 15px;
+}
 
-
-
+.coupon-card .img-fluid {
+    margin: auto;
+}
