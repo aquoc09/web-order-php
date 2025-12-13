@@ -1,5 +1,5 @@
 <?php
-function create_order_and_details($conn, $userId, $address, $note, $totalMoney, $paymentMethod, $status) {
+function create_order_and_details($conn, $userId, $address, $note, $totalMoney, $paymentMethod, $status, $validCoupons = []) {
     $conn->begin_transaction();
     try {
         // 1. Fetch Cart Items and Lock the Rows
@@ -46,7 +46,18 @@ function create_order_and_details($conn, $userId, $address, $note, $totalMoney, 
         }
         $detailStmt->close();
 
-        // 4. Clear Cart (only if the order is confirmed, not for pending)
+        // 4. Insert Applied Coupons
+        if (!empty($validCoupons)) {
+            $couponSql = "INSERT INTO order_coupon (order_id, coupon_code, discount_amount) VALUES (?, ?, ?)";
+            $couponStmt = $conn->prepare($couponSql);
+            foreach ($validCoupons as $coupon) {
+                $couponStmt->bind_param("isd", $orderId, $coupon['code'], $coupon['discount_amount']);
+                $couponStmt->execute();
+            }
+            $couponStmt->close();
+        }
+
+        // 5. Clear Cart (only if the order is confirmed, not for pending)
         if ($status !== 'pending') {
             $deleteItemsSql = "DELETE FROM cart_item WHERE cartId = ?";
             $deleteItemsStmt = $conn->prepare($deleteItemsSql);

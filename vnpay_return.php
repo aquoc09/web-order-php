@@ -2,7 +2,7 @@
 // Bắt đầu session và include header, kết nối DB
 include_once 'includes/header.php';
 require_once 'auth/vnpay_config.php';
-require_once 'function/order_helper.php'; // Include the new helper
+require_once 'function/order_helper.php';
 
 // Lấy dữ liệu VNPAY trả về
 $vnp_SecureHash = $_GET['vnp_SecureHash'] ?? '';
@@ -45,7 +45,7 @@ $vnp_PayDate = $_GET['vnp_PayDate'] ?? ''; // Thời gian thanh toán
             // 1. Xác thực chữ ký
             if ($secureHash == $vnp_SecureHash) {
                 // Fetch order to check status
-                $order_check_sql = "SELECT `status`, `user_id` FROM `order` WHERE `id` = ?";
+                $order_check_sql = "SELECT `id`, `status`, `user_id`, `totalMoney` FROM `order` WHERE `id` = ?";
                 $stmt_check = $conn->prepare($order_check_sql);
                 $stmt_check->bind_param("i", $vnp_TxnRef);
                 $stmt_check->execute();
@@ -53,91 +53,99 @@ $vnp_PayDate = $_GET['vnp_PayDate'] ?? ''; // Thời gian thanh toán
                 $order_data = $order_result->fetch_assoc();
                 $stmt_check->close();
 
-                if ($order_data && $order_data['status'] == 'pending') {
+                if ($order_data) {
                     // 2. Kiểm tra kết quả giao dịch
                     if ($vnp_ResponseCode == '00') {
                         // Giao dịch thành công
-                        // 3. Cập nhật trạng thái đơn hàng và xóa giỏ hàng
-                        $conn->begin_transaction();
-                        try {
-                            // Update order status
-                            $update_sql = "UPDATE `order` SET `status` = 'paid' WHERE `id` = ?";
-                            $stmt_update = $conn->prepare($update_sql);
-                            $stmt_update->bind_param("i", $vnp_TxnRef);
-                            $stmt_update->execute();
-                            $stmt_update->close();
+                        if ($order_data['status'] == 'pending') {
+                            // Chỉ xử lý nếu đơn hàng đang ở trạng thái chờ
+                            $conn->begin_transaction();
+                            try {
+                                // Update order status to 'accepted' or similar
+                                $update_sql = "UPDATE `order` SET `status` = 'accepted' WHERE `id` = ?";
+                                $stmt_update = $conn->prepare($update_sql);
+                                $stmt_update->bind_param("i", $vnp_TxnRef);
+                                $stmt_update->execute();
+                                $stmt_update->close();
 
-                            // Clear the user's cart
-                            clear_cart($conn, $order_data['user_id']);
+                                // Clear the user's cart
+                                clear_cart($conn, $order_data['user_id']);
 
-                            // Lấy chi tiết đơn hàng để hiển thị
-                            $order_items = [];
-                            $details_sql = "
-                                SELECT p.name, od.numOfProducts as quantity, p.price 
-                                FROM order_detail od
-                                JOIN product p ON od.product_id = p.id
-                                WHERE od.order_id = ?
-                            ";
-                            $stmt_details = $conn->prepare($details_sql);
-                            $stmt_details->bind_param("i", $vnp_TxnRef);
-                            $stmt_details->execute();
-                            $details_result = $stmt_details->get_result();
-                            $order_items = $details_result->fetch_all(MYSQLI_ASSOC);
-                            $stmt_details->close();
+                                // Clear the coupon session
+                                unset($_SESSION['applied_coupons']);
+                                unset($_SESSION['coupon_user_id']);
 
-                            $conn->commit();
-            ?>
-                            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-                            <h1 class="mb-3 mt-3">Thanh toán thành công!</h1>
-                            <p class="lead">Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất.</p>
-                            <div class="card mt-4">
-                                <div class="card-header"><strong>Thông tin giao dịch</strong></div>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Mã đơn hàng:</span>
-                                        <strong>#<?php echo htmlspecialchars($vnp_TxnRef); ?></strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Số tiền:</span>
-                                        <strong><?php echo number_format($vnp_Amount, 0, ',', '.'); ?> VNĐ</strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Mã giao dịch VNPAY:</span>
-                                        <strong><?php echo htmlspecialchars($vnp_TransactionNo); ?></strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Ngân hàng:</span>
-                                        <strong><?php echo htmlspecialchars($vnp_BankCode); ?></strong>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Thời gian thanh toán:</span>
-                                        <strong><?php echo date("d/m/Y H:i:s", strtotime($vnp_PayDate)); ?></strong>
-                                    </li>
-                                </ul>
-                            </div>
+                                $conn->commit();
+                            } catch (Exception $e) {
+                                $conn->rollback();
+                                error_log("VNPay Return Error: " . $e->getMessage());
+                                // Fall through to show an error message
+                            }
+                        }
 
-                            <div class="card mt-4 text-start">
-                                <div class="card-header"><strong>Chi tiết đơn hàng</strong></div>
-                                <ul class="list-group list-group-flush">
-                                    <?php foreach ($order_items as $item) : ?>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <?php echo htmlspecialchars($item['name']); ?> (x<?php echo $item['quantity']; ?>)
-                                            <span><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?> VNĐ</span>
+                        // --- Hiển thị chi tiết đơn hàng (luôn luôn hiển thị nếu giao dịch VNPAY thành công) ---
+                        $final_amount = $order_data['totalMoney'];
+                        $original_amount = 0;
+                        $order_items = [];
+                        $applied_coupons = [];
+
+                        // Fetch order items
+                        $details_sql = "SELECT p.name, od.numOfProducts as quantity, p.price FROM order_detail od JOIN product p ON od.product_id = p.id WHERE od.order_id = ?";
+                        $stmt_details = $conn->prepare($details_sql);
+                        $stmt_details->bind_param("i", $vnp_TxnRef);
+                        $stmt_details->execute();
+                        $details_result = $stmt_details->get_result();
+                        $order_items = $details_result->fetch_all(MYSQLI_ASSOC);
+                        $stmt_details->close();
+
+                        // Fetch applied coupons
+                        $coupons_sql = "SELECT coupon_code, discount_amount FROM order_coupon WHERE order_id = ?";
+                        $coupons_stmt = $conn->prepare($coupons_sql);
+                        $coupons_stmt->bind_param("i", $vnp_TxnRef);
+                        $coupons_stmt->execute();
+                        $coupons_result = $coupons_stmt->get_result();
+                        $applied_coupons = $coupons_result->fetch_all(MYSQLI_ASSOC);
+                        $coupons_stmt->close();
+
+                        // Calculate original amount
+                        foreach ($order_items as $item) {
+                            $original_amount += $item['quantity'] * $item['price'];
+                        }
+                        
+                        ?>
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                        <h1 class="mb-3 mt-3">Thanh toán thành công!</h1>
+                        <p class="lead">Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất.</p>
+
+                        <div class="card mt-4 text-start">
+                            <div class="card-header"><strong>Chi tiết đơn hàng #<?php echo htmlspecialchars($vnp_TxnRef); ?></strong></div>
+                            <ul class="list-group list-group-flush">
+                                <?php foreach ($order_items as $item) : ?>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <?php echo htmlspecialchars($item['name']); ?> (x<?php echo $item['quantity']; ?>)
+                                        <span><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?> VNĐ</span>
+                                    </li>
+                                <?php endforeach; ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Tạm tính
+                                    <span><?php echo number_format($original_amount, 0, ',', '.'); ?> VNĐ</span>
+                                </li>
+                                <?php if (!empty($applied_coupons)) : ?>
+                                    <?php foreach ($applied_coupons as $coupon) : ?>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center text-success">
+                                            <span>Giảm giá (<strong><?php echo htmlspecialchars($coupon['coupon_code']); ?></strong>)</span>
+                                            <span>-<?php echo number_format($coupon['discount_amount'], 0, ',', '.'); ?> VNĐ</span>
                                         </li>
                                     <?php endforeach; ?>
-                                </ul>
-                            </div>
-            <?php
-                        } catch (Exception $e) {
-                            $conn->rollback();
-                            // Show generic error to user, log the detailed error
-                            error_log("VNPay Return Error: " . $e->getMessage());
-            ?>
-                            <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
-                            <h1 class="mb-3 mt-3">Lỗi xử lý đơn hàng</h1>
-                            <p class="lead">Giao dịch của bạn đã thành công nhưng có lỗi khi cập nhật đơn hàng. Vui lòng liên hệ hỗ trợ.</p>
-            <?php
-                        }
+                                <?php endif; ?>
+                                <li class="list-group-item d-flex justify-content-between align-items-center fw-bold">
+                                    Tổng cộng
+                                    <span><?php echo number_format($final_amount, 0, ',', '.'); ?> VNĐ</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <?php
+
                     } else {
                         // Giao dịch không thành công
                         $update_fail_sql = "UPDATE `order` SET `status` = 'denied' WHERE `id` = ?";
@@ -145,34 +153,27 @@ $vnp_PayDate = $_GET['vnp_PayDate'] ?? ''; // Thời gian thanh toán
                         $stmt_fail->bind_param("i", $vnp_TxnRef);
                         $stmt_fail->execute();
                         $stmt_fail->close();
-            ?>
+                        ?>
                         <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
                         <h1 class="mb-3 mt-3">Giao dịch không thành công</h1>
                         <p class="lead">Đã có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại.</p>
-            <?php
+                        <?php
                     }
-                } else if ($order_data && $order_data['status'] == 'accepted') {
-                     // If order is already processed
-            ?>
-                    <i class="bi bi-info-circle-fill text-info" style="font-size: 5rem;"></i>
-                    <h1 class="mb-3 mt-3">Đơn hàng đã được xử lý</h1>
-                    <p class="lead">Đơn hàng này đã được thanh toán và xử lý trước đó.</p>
-            <?php
                 } else {
-                     // Order not found or status is not pending_payment
-            ?>
+                    // Order not found
+                    ?>
                     <i class="bi bi-shield-exclamation text-danger" style="font-size: 5rem;"></i>
                     <h1 class="mb-3 mt-3">Lỗi giao dịch</h1>
                     <p class="lead">Không tìm thấy đơn hàng hoặc đơn hàng không hợp lệ.</p>
-            <?php
+                    <?php
                 }
             } else {
                 // Chữ ký không hợp lệ
-            ?>
+                ?>
                 <i class="bi bi-shield-exclamation text-danger" style="font-size: 5rem;"></i>
                 <h1 class="mb-3 mt-3">Lỗi xác thực giao dịch</h1>
                 <p class="lead">Chữ ký không hợp lệ. Giao dịch không thể được xác nhận.</p>
-            <?php
+                <?php
             }
             ?>
 
@@ -187,6 +188,9 @@ $vnp_PayDate = $_GET['vnp_PayDate'] ?? ''; // Thời gian thanh toán
 </div>
 
 <?php
+// Clear applied coupons from the session after a successful order
+unset($_SESSION['applied_coupons']);
+unset($_SESSION['coupon_user_id']);
 // Include footer
 include_once 'includes/footer.php';
 ?>

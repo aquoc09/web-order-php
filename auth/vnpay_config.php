@@ -8,7 +8,7 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 //Chỉnh sửa ở đây.
 // $vnp_TmnCode = "YOUR_TMN_CODE"; //Website ID in VNPAY System
-// $vnp_HashSecret = "YOUR_HASH_SECRET"; //Secret key
+// $vnp_HashSecret = "YOUR_SECRET_KEY"; //Secret key
 // $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 // $vnp_Returnurl = "http://localhost/web-order-php/vnpay_return.php";
 // $vnp_apiUrl = "http://sandbox.vnpayment.vn/merchant_webapi/merchant.html";

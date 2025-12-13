@@ -13,7 +13,7 @@ if ($token) {
         $refreshTime = new DateTime($returnToken['refresh_time']);
         $userId = $returnToken['user_id'];
         if($refreshTime > $now){
-            $token = generateToken($user['id']);
+            $token = generateToken($conn, $userId);
             // Gửi token về browser bằng cookie
             setcookie("auth_token", $token, time() + 86400, "/", "", false, true); // httponly = true
         }
