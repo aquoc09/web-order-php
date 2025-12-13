@@ -34,7 +34,7 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                 VALUES ('$code', '$discountAmount', '$conditionAmount', '$imgName', '$description', '$active')";
 
         if ($conn->query($sql)) {
-            header("Location: ../index.php?mod=manage&ac=coupon&msg=success");
+            header("Location: ../index.php?mod=manage&ac=coupons&msg=success");
             exit();
         } else {
             echo "Lỗi lưu DB: " . $conn->error;
