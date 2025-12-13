@@ -1,8 +1,11 @@
 FROM php:8.2-apache
 
-# 🔥 FORCE clean MPM state (BẮT BUỘC)
+# FORCE clean MPM state (BẮT BUỘC)
 RUN a2dismod mpm_event mpm_worker || true \
  && a2enmod mpm_prefork
+
+# DEBUG: in danh sách module Apache
+RUN apachectl -M
 
 # Enable Apache rewrite module
 RUN a2enmod rewrite
