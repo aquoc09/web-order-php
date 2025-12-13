@@ -1,53 +1,49 @@
 <?php
-require_once __DIR__ . '/../../database/conf.php';
+require_once __DIR__ . '/../../database/conf.php'; // kết nối DB
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../index.php');
-    exit;
+$code            = $_POST['code'];
+$discountAmount  = $_POST['discountAmount'];
+$conditionAmount = $_POST['conditionAmount'];
+$description     = $_POST['description'] ?? '';
+
+$active = isset($_POST['active']) ? 1 : 0;
+
+/* ===== Folder coupons trong images ===== */
+$root   = realpath(__DIR__ . "/../../"); // root project
+$folder = $root . "/images/coupons";
+
+if (!is_dir($folder)) {
+    mkdir($folder, 0777, true);
 }
 
-$code            = trim($_POST['code']);
-$discountAmount  = floatval($_POST['discountAmount']);
-$conditionAmount = floatval($_POST['conditionAmount']);
-$description     = $_POST['description'] ?? '';
-$active          = isset($_POST['active']) ? 1 : 0;
+/* ===== Upload ảnh ===== */
+if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
 
-// ===== Xử lý upload ảnh =====
-$imageName = null;
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
 
-if (!empty($_FILES['image']['name'])) {
-    $uploadDir = __DIR__ . '/../uploads/coupons/';
+    // đặt tên file giống product
+    $imgName = strtolower($code) . "_" . time() . "." . $ext;
 
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+    $tmp    = $_FILES['image']['tmp_name'];
+    $target = $folder . "/" . $imgName;
+
+    if (move_uploaded_file($tmp, $target)) {
+
+        // ===== Lưu DB =====
+        $sql = "INSERT INTO coupon(code, discountAmount, conditionAmount, image, description, active)
+                VALUES ('$code', '$discountAmount', '$conditionAmount', '$imgName', '$description', '$active')";
+
+        if ($conn->query($sql)) {
+            header("Location: ../index.php?mod=general&ac=coupon&msg=success");
+            exit();
+        } else {
+            echo "Lỗi lưu DB: " . $conn->error;
+        }
+
+    } else {
+        echo "Lỗi upload file ảnh coupon.";
     }
 
-    $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $imageName = 'coupon_' . time() . '.' . $ext;
-    $uploadPath = $uploadDir . $imageName;
-
-    move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath);
-}
-
-// ===== Insert DB =====
-$sql = "INSERT INTO coupon 
-        (code, active, discountAmount, conditionAmount, image, description)
-        VALUES (?, ?, ?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param(
-    "siddds",
-    $code,
-    $active,
-    $discountAmount,
-    $conditionAmount,
-    $imageName,
-    $description
-);
-
-if ($stmt->execute()) {
-    header("Location: ../index.php?page=coupon&success=1");
 } else {
-    echo "Lỗi khi thêm coupon!";
+    echo "Chưa chọn file ảnh hoặc file bị lỗi.";
 }
-?>

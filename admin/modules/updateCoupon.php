@@ -1,78 +1,69 @@
 <?php
 require_once __DIR__ . '/../../database/conf.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../index.php");
-    exit;
-}
-
-$id              = intval($_POST['id']);
+// ===== Lấy dữ liệu từ form =====
+$id              = $_POST['id'];
 $code            = trim($_POST['code']);
-$discountAmount  = floatval($_POST['discountAmount']);
-$conditionAmount = floatval($_POST['conditionAmount']);
+$discountAmount  = $_POST['discountAmount'];
+$conditionAmount = $_POST['conditionAmount'];
 $description     = $_POST['description'] ?? '';
 $active          = isset($_POST['active']) ? 1 : 0;
 
-// ===== Lấy ảnh cũ =====
-$oldImage = null;
-$getSql = "SELECT image FROM coupon WHERE id = ?";
-$getStmt = $conn->prepare($getSql);
-$getStmt->bind_param("i", $id);
-$getStmt->execute();
-$getResult = $getStmt->get_result();
+/* --- Lấy coupon cũ để biết ảnh cũ --- */
+$sqlOld = "SELECT image FROM coupon WHERE id=$id";
+$old = $conn->query($sqlOld)->fetch_assoc();
+$oldImage = $old['image'];
 
-if ($getResult->num_rows > 0) {
-    $oldImage = $getResult->fetch_assoc()['image'];
+/* --- Thư mục ảnh coupons --- */
+$root   = realpath(__DIR__ . "/../../"); // root project
+$folder = $root . "/images/coupons";
+
+if (!is_dir($folder)) {
+    mkdir($folder, 0777, true);
 }
 
-// ===== Upload ảnh mới (nếu có) =====
-$newImage = $oldImage;
+$newImageName = $oldImage; // mặc định giữ ảnh cũ
 
-if (!empty($_FILES['image']['name'])) {
-    $uploadDir = __DIR__ . '/../images/coupons/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
+/* --- Nếu upload ảnh mới --- */
+if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
 
-    $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $newImage = 'coupon_' . time() . '.' . $ext;
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    $imgName = strtolower($code) . "_" . time() . "." . $ext;
 
-    move_uploaded_file(
-        $_FILES['image']['tmp_name'],
-        $uploadDir . $newImage
-    );
+    $tmp    = $_FILES['image']['tmp_name'];
+    $target = $folder . "/" . $imgName;
 
-    // Xóa ảnh cũ
-    if ($oldImage && file_exists($uploadDir . $oldImage)) {
-        unlink($uploadDir . $oldImage);
+    if (move_uploaded_file($tmp, $target)) {
+
+        $newImageName = $imgName;
+
+        // Xóa ảnh cũ nếu tồn tại
+        if (!empty($oldImage) && file_exists($folder . "/" . $oldImage)) {
+            unlink($folder . "/" . $oldImage);
+        }
+
+    } else {
+        echo "Lỗi upload ảnh coupon.";
+        exit();
     }
 }
 
-// ===== Update DB =====
-$sql = "UPDATE coupon 
-        SET code = ?, 
-            discountAmount = ?, 
-            conditionAmount = ?, 
-            description = ?, 
-            active = ?, 
-            image = ?
-        WHERE id = ?";
+/* --- Cập nhật DB --- */
+$sqlUpdate = "
+    UPDATE coupon 
+    SET code='$code',
+        discountAmount='$discountAmount',
+        conditionAmount='$conditionAmount',
+        description='$description',
+        image='$newImageName',
+        active='$active'
+    WHERE id=$id
+";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param(
-    "sddsisi",
-    $code,
-    $discountAmount,
-    $conditionAmount,
-    $description,
-    $active,
-    $newImage,
-    $id
-);
-
-$stmt->execute();
-
-// Redirect về danh sách coupon
-header("Location: ../index.php?mod=general&ac=coupon");
-exit;
+if ($conn->query($sqlUpdate)) {
+    header("Location: ../index.php?mod=general&ac=coupons&msg=updated");
+    exit();
+} else {
+    echo "Lỗi cập nhật DB: " . $conn->error;
+}
 ?>

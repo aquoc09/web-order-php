@@ -95,7 +95,7 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                         <li class="nav-item <?= ($mod=='manage' && $ac=='coupons') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=coupons">
                                 <i class="bi bi-tag"></i>
-                                khuyến mãi/Coupons
+                                Khuyến mãi/Coupons
                             </a>
                         </li>
 

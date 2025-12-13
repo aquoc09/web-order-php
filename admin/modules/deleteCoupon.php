@@ -1,51 +1,47 @@
 <?php
 require_once __DIR__ . '/../../database/conf.php';
 
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-$id = $_GET['id'] ?? 0;
-$id = intval($id);
-
-if ($id <= 0) {
+if (!isset($_GET['id'])) {
     echo json_encode([
-        'status' => 'error',
-        'message' => 'ID không hợp lệ'
+        "status" => "error",
+        "message" => "Missing ID"
     ]);
     exit;
 }
 
-// Lấy ảnh trước khi xóa
-$sql = "SELECT image FROM coupon WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
+$id = intval($_GET['id']);
+
+/* --- Lấy ảnh coupon trước khi xóa --- */
+$sqlImg = "SELECT image FROM coupon WHERE id = $id";
+$rsImg = $conn->query($sqlImg);
 
 $image = null;
-if ($result->num_rows > 0) {
-    $image = $result->fetch_assoc()['image'];
+if ($rsImg && $rsImg->num_rows > 0) {
+    $image = $rsImg->fetch_assoc()['image'];
 }
 
-// Xóa DB
-$delSql = "DELETE FROM coupon WHERE id = ?";
-$delStmt = $conn->prepare($delSql);
-$delStmt->bind_param("i", $id);
+/* --- Xóa coupon --- */
+$sql = "DELETE FROM coupon WHERE id = $id";
 
-if ($delStmt->execute()) {
+if ($conn->query($sql) === TRUE) {
 
-    // Xóa ảnh
-    if ($image) {
-        $path = __DIR__ . '/../images/coupons/' . $image;
+    // Xóa ảnh trong images/coupons
+    if (!empty($image)) {
+        $root = realpath(__DIR__ . "/../../");
+        $path = $root . "/images/coupons/" . $image;
+
         if (file_exists($path)) {
             unlink($path);
         }
     }
 
-    echo json_encode(['status' => 'success']);
+    echo json_encode(["status" => "success"]);
 } else {
     echo json_encode([
-        'status' => 'error',
-        'message' => 'Không thể xóa coupon'
+        "status" => "error",
+        "message" => $conn->error
     ]);
 }
 ?>
