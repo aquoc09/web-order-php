@@ -1,9 +1,13 @@
 FROM php:8.2-apache
 
+# 🔥 FORCE clean MPM state (BẮT BUỘC)
+RUN a2dismod mpm_event mpm_worker || true \
+ && a2enmod mpm_prefork
+
 # Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# Install system dependencies for Composer + PHP zip extension
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
@@ -22,11 +26,8 @@ COPY . /var/www/html/
 
 WORKDIR /var/www/html/
 
-# Install composer packages
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
-# Permissions
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
-
