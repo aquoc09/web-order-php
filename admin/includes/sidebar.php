@@ -60,35 +60,42 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                         <li class="nav-item <?= ($mod=='manage' && $ac=='revenues') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=revenues">
                                 <i class="bi bi-speedometer2"></i>
-                                Doanh thu
+                                Doanh thu/Revenues
                             </a>
                         </li>
 
                         <li class="nav-item <?= ($mod=='manage' && $ac=='products') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=products">
                                 <i class="bi bi-bag-plus-fill"></i>
-                                Món ăn
+                                Món ăn/Products
                             </a>
                         </li>
 
                         <li class="nav-item <?= ($mod=='manage' && $ac=='categories') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=categories">
                                 <i class="bi bi-link-45deg"></i>
-                                Danh mục
+                                Danh mục/Categories
                             </a>
                         </li>
 
                         <li class="nav-item <?= ($mod=='manage' && $ac=='orders') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=orders">
                                 <i class="bi bi-box"></i>
-                                Orders
+                                Đơn hàng/Orders
                             </a>
                         </li>
 
                         <li class="nav-item <?= ($mod=='manage' && $ac=='users') ? 'active' : '' ?>">
                             <a href="index.php?mod=manage&ac=users">
                                 <i class="bi bi-people"></i>
-                                Users
+                                Người dùng/Users
+                            </a>
+                        </li>
+
+                        <li class="nav-item <?= ($mod=='manage' && $ac=='revenues') ? 'active' : '' ?>">
+                            <a href="index.php?mod=manage&ac=revenues">
+                                <i class="bi bi-speedometer2"></i>
+                                khuyến mãi/Coupons
                             </a>
                         </li>
 
