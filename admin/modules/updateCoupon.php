@@ -61,7 +61,7 @@ $sqlUpdate = "
 ";
 
 if ($conn->query($sqlUpdate)) {
-    header("Location: ../index.php?mod=general&ac=coupons&msg=updated");
+    header("Location: ../index.php?mod=manage&ac=coupons&msg=updated");
     exit();
 } else {
     echo "Lỗi cập nhật DB: " . $conn->error;
