@@ -76,11 +76,11 @@
                     <i class="bi bi-google me-2"></i> Đăng nhập với Google
                 </button>
 
-                <!-- Facebook Login -->
+                <!-- Facebook Login
                 <button type="button" class="btn btn-outline-primary col-md-4 d-flex align-items-center justify-content-center"
                     onclick="window.location.href='auth/login_facebook.php'">
                     <i class="bi bi-facebook me-2"></i> Đăng nhập với Facebook
-                </button>
+                </button> -->
             </div>
         </form>
     </div>

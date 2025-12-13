@@ -10,7 +10,7 @@ include 'includes/header.php'; // header + navbar
         </div>
         <!-- Price offer -->
         <div class="">
-            <a href="./menu-site/order.html"><img src="./img/banner/price-offer.png" alt="" class="price-offer"></a>
+            <a href="menu.php"><img src="./img/banner/price-offer.png" alt="" class="price-offer"></a>
         </div>
         <!-- Blog info -->
         <div class="row align-items-start" style="margin-top: 50px;">
@@ -21,7 +21,7 @@ include 'includes/header.php'; // header + navbar
                     Tại PQ, mỗi món ăn đều là một tác phẩm nghệ thuật được chế biến tỉ mỉ, hòa quyện giữa nguyên liệu thượng hạng và phong cách trình bày tinh tế của người Nhật. Không chỉ có món chính, các món kèm như súp miso, tempura giòn rụm, bánh xèo Nhật Bản (okonomiyaki) hay lẩu shabu thanh ngọt cũng góp phần mang lại trải nghiệm ẩm thực trọn vẹn.
                     Hãy để PQ đánh thức mọi giác quan của bạn với những hương vị chuẩn Nhật và không gian đậm chất Tokyo ngay giữa thành phố!
                 </p>
-                <a href="./menu-site/order.html" class="custom-link">Xem thực đơn</a>
+                <a href="menu.php" class="custom-link">Xem thực đơn</a>
             </div>
             <div class="col-md-5 d-flex flex-row img-section">
                 <img src="./img/pics-info/blog-set-curry.jpg" alt="" class="img-blog-food" >

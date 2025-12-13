@@ -1,70 +1,53 @@
 <?php
-include '../database/conf.php';
-include '../function/validateValue.php';
-include '../application_config.php';
-//Import PHPMailer classes into the global namespace
-//These must be at the top of your script, not inside a function
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
+require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../database/conf.php';
+require __DIR__ . '/../function/sendMailGmailApi.php'; // file có hàm sendMailGmail()
 
-//Load Composer's autoloader (created by composer, not included with PHPMailer)
-require '../vendor/autoload.php';
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-//Create an instance; passing `true` enables exceptions
-$mail = new PHPMailer(true);
+    $email = trim($_POST["email"]);
+    if (empty($email)) {
+        exit("Vui lòng nhập email!");
+    }
 
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];
-
-    $sql = "SELECT * FROM user WHERE email = ?";
-    $stmt = $conn->prepare($sql);
+    // Kiểm tra email tồn tại
+    $stmt = $conn->prepare("SELECT id FROM user WHERE email=? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $rs = $stmt->get_result();
 
-    if ($result->num_rows === 0) {
-        header("Location: ../login-form.php?error=Email không tồn tại");
-        exit;
+    if ($rs->num_rows === 0) {
+        exit("Email không tồn tại!");
     }
 
-    // Tạo mật khẩu mới
-    $newPassword = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ0123456789"), 0, 8);
-    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+    // Tạo mật khẩu mới 8 số
+    $chars = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+    $newPassword = substr(str_shuffle($chars), 0, 8);
 
-    // Update DB
-    $sql = "UPDATE user SET password=? WHERE email=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $hashedPassword, $email);
-    $stmt->execute();
+    // Mã hoá mật khẩu
+    $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+
+    // Cập nhật DB
+    $update = $conn->prepare("UPDATE user SET password=? WHERE email=?");
+    $update->bind_param("ss", $hashed, $email);
+    $update->execute();
+
+    // Gửi email bằng Gmail API
+    $subject = "RESET PASSWORD PQ RESTAURANT";
+    $body = "
+        Chào bạn,<br><br>
+        Mật khẩu mới của bạn là: <b>$newPassword</b><br><br>
+        Vui lòng đăng nhập và đổi mật khẩu ngay.<br><br>
+        Trân trọng,<br>
+        PQ Restaurant
+    ";
 
     try {
-        //Server settings
-        $mail->isSMTP();                                            //Send using SMTP
-        $mail->Host       = MAIL_HOST;                     //Set the SMTP server to send through
-        $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-        $mail->Username   = MAIL_USERNAME;                     //SMTP username
-        $mail->Password   = MAIL_APP_PASSWORD;                               //SMTP password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-        $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
-
-        //Recipients
-        $mail->setFrom(MAIL_SENDER, 'PQ Restaurant');
-        $mail->addAddress($email);     //Add a recipient
-
-        //Content
-        $mail->isHTML(true);                                  //Set email format to HTML
-        $mail->Subject = 'RESET PASSWORD';
-        $mail->Body    = "Đây là mật khẩu được làm mới dành cho bạn, không tiết lộ cho bất cứ ai và hãy đặt lại mật khẩu:
-                             <b>$newPassword</b>";
-
-        $mail->send();
-        header("Location: ../login-form.php?message='Gửi mật khẩu thành công'");
+        sendMailGmail($email, $subject, $body);
+        header("Location: ../login-form.php?message='Đã gửi email thành công cho $email'");
+        exit;
     } catch (Exception $e) {
-        header("Location: ../login-form.php?message='Gửi mật khẩu thất bại'");
+        header("Location: ../login-form.php?message='Gửi mail thất bại");
+        exit;
     }
-
-    exit;
 }
-?>

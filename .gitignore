@@ -2,8 +2,6 @@
 #   PHP + Composer Project Gitignore
 # -------------------------------------------------
 
-#config
-application_config.php
 
 # Composer vendor
 /vendor/

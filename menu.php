@@ -58,7 +58,14 @@ if ($category_id) {
         // Get total number of products for pagination
         $stmt_total = $conn->prepare($count_sql);
         if ($category) {
-            $stmt_total->bind_param("s", $category['id']);
+            // Có chọn category -> lọc theo category
+            $total_items_sql = "SELECT COUNT(*) FROM product WHERE category_id = ?";
+            $stmt_total = $conn->prepare($total_items_sql);
+            $stmt_total->bind_param("i", $category['id']);
+        } else {
+            // Không chọn category -> lấy tất cả
+            $total_items_sql = "SELECT COUNT(*) FROM product";
+            $stmt_total = $conn->prepare($total_items_sql);
         }
         $stmt_total->execute();
         $total_items_result = $stmt_total->get_result();
@@ -70,13 +77,18 @@ if ($category_id) {
         $select_sql .= " ORDER BY p.id DESC LIMIT ? OFFSET ?";
         $stmt_items = $conn->prepare($select_sql);
         if ($category) {
-            $stmt_items->bind_param("sii", $category['id'], $items_per_page, $offset);
+            $sql = "SELECT * FROM product WHERE category_id = ? LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iii", $category['id'], $items_per_page, $offset);
         } else {
-            // No category, just bind limit and offset
-            $stmt_items->bind_param("ii", $items_per_page, $offset);
+            // Không chọn danh mục -> lấy tất cả
+            $sql = "SELECT * FROM product LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ii", $items_per_page, $offset);
         }
-        $stmt_items->execute();
-        $items = $stmt_items->get_result();
+        $stmt->execute();
+        $items = $stmt->get_result();
+
         ?>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-4">
         <?php if($items && $items->num_rows > 0): ?>

@@ -9,7 +9,7 @@ if (!defined("ROOT"))
         $mod = isset($_GET['mod'])? $_GET['mod'] : "";
         $ac = isset($_GET['ac'])? $_GET['ac'] : "";
         $validMod = ['general', 'manage'];
-        $validAc = ['dashboard','products', 'categories', 'orders', 'users', 'coupons'];
+        $validAc = ['revenues','products', 'categories', 'orders', 'users'];
         if(!in_array($mod, $validMod)){
             include 'home.php';
             return;
@@ -20,7 +20,6 @@ if (!defined("ROOT"))
                     include 'home.php';
                     return;
                 }
-                if($ac == 'dashboard') include 'general/dashboard.php';
                 if($ac == 'categories') include 'general/categories.php';
                 if($ac == 'products') include 'general/products.php';
                 if($ac == 'users') include 'general/users.php';
@@ -31,6 +30,7 @@ if (!defined("ROOT"))
                     include 'home.php';
                     return;
                 }
+                if($ac == 'revenues') include 'manage/revenues.php';
                 if($ac == 'products') include 'manage/products.php';
                 if($ac == 'categories') include 'manage/categories.php';
                 if($ac == 'orders') include 'manage/orders.php';

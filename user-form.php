@@ -27,10 +27,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
+
+        $avatarFileName = $currentUser['userImage']; // Giữ lại ảnh cũ nếu không upload mới
+
+        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $fileTmp = $_FILES['avatar']['tmp_name'];
+            
+            $username = preg_replace('/[^a-zA-Z0-9_\-]/', '', $currentUser['username']); // tránh ký tự lạ
+            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+            $fileName = $username . '_' . time() . '.' . $ext;
+
+
+            $targetDir = __DIR__ . '/images/users/';
+            $targetPath = $targetDir . $fileName;
+
+            // Tạo thư mục nếu chưa tồn tại
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+
+            // Kiểm tra định dạng ảnh
+            $validExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (!in_array($ext, $validExt)) {
+                $errors[] = "Chỉ cho phép file JPG, PNG, GIF, WEBP.";
+            } else {
+                // Upload OK → lưu file
+                if (move_uploaded_file($fileTmp, $targetPath)) {
+
+                    // XÓA ảnh cũ nếu có
+                    if (!empty($currentUser['userImage'])) {
+                        $oldPath = __DIR__ . '/images/users/' . $currentUser['userImage'];
+                        if (file_exists($oldPath)) unlink($oldPath);
+                    }
+                    $avatarFileName = $fileName;
+                } else {
+                    $errors[] = "Không thể upload ảnh.";
+                }
+            }
+        }
+
         // Cập nhật thông tin người dùng vào database
-        $update_sql = "UPDATE user SET fullName = ?, email = ?, phone = ?, address = ?, updateAt = NOW() WHERE id = ?";
+        $update_sql = "UPDATE user 
+            SET fullName = ?, email = ?, phone = ?, address = ?, userImage = ?, updatedAt = NOW() 
+            WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("ssssi", $fullName, $email, $phone, $address, $userId);
+        $update_stmt->bind_param("sssssi", $fullName, $email, $phone, $address, $avatarFileName, $userId);
+
 
         if ($update_stmt->execute()) {
             $success = "Cập nhật thông tin thành công!";
@@ -69,7 +113,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="alert alert-success"><?php echo $success; ?></div>
                     <?php endif; ?>
 
-                    <form action="user-form.php" method="POST">
+                    <form action="user-form.php" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="avatar" class="form-label">Ảnh đại diện</label><br>
+
+                            <?php if (!empty($currentUser['userImage'])): ?>
+                                <img src="images/users/<?= $currentUser['userImage'] ?>" 
+                                    alt="Avatar" 
+                                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px;">
+                            <?php else: ?>
+                                <p class="text-muted">Chưa có ảnh</p>
+                            <?php endif; ?>
+
+                            <input type="file" name="avatar" class="form-control mt-2">
+                        </div>
+
                         <div class="mb-3">
                             <label for="username" class="form-label">Tên đăng nhập</label>
                             <input type="text" class="form-control" id="username" value="<?= htmlspecialchars($currentUser['username']) ?>" disabled>
