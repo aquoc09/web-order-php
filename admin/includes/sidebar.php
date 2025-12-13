@@ -19,6 +19,13 @@ $ac  = isset($_GET['ac']) ? $_GET['ac'] : '';
                 <li class="root-nav-item">
                     <div class="nav-item-title">CHUNG</div>
                     <ul class="item-group list-unstyled">
+                        <li class="nav-item <?= ($mod=='general' && $ac=='coupons') ? 'active' : '' ?>">
+                            <a href="index.php?mod=general&ac=coupons">
+                                <i class="bi bi-plus-square"></i>
+                                Thêm khuyến mãi
+                            </a>
+                        </li>
+
                         <li class="nav-item <?= ($mod=='general' && $ac=='products') ? 'active' : '' ?>">
                             <a href="index.php?mod=general&ac=products">
                                 <i class="bi bi-plus-square"></i>
