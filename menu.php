@@ -1,17 +1,22 @@
 <?php
 include 'includes/header.php'; // header + navbar
 
-$category_id = $_GET['category_id'] ?? -1; // default
+// Get category from GET parameter
+$category_id = !empty($_GET['category_id']) ? $_GET['category_id'] : null;
 $category = null;
-$sql = "SELECT * FROM category";
-$result_categories = $conn->query($sql);
-if($result_categories){
-    while($cat = $result_categories->fetch_assoc()){
-        if($cat['id']==$category_id){
-            $category = $cat;
-            break;
-        }
+
+// Fetch the specific category if an ID is provided
+if ($category_id) {
+    // Use prepared statement to prevent SQL injection
+    $sql = "SELECT * FROM category WHERE id = ?";
+    $stmt_cat = $conn->prepare($sql);
+    $stmt_cat->bind_param("s", $category_id);
+    $stmt_cat->execute();
+    $result = $stmt_cat->get_result();
+    if ($result->num_rows > 0) {
+        $category = $result->fetch_assoc();
     }
+    $stmt_cat->close();
 }
 ?>
 <style>
@@ -25,7 +30,7 @@ if($result_categories){
 <div class="container py-2">
     <nav class="breadcrumb-nav small text-muted">
         <a href="index.php" class="text-decoration-none text-muted">Trang chủ</a> >
-        <span class="text-dark"><?= ucfirst($category['name']?? '') ?></span>
+        <span class="text-dark"><?= ucfirst($category['name'] ?? 'Tất cả sản phẩm') ?></span>
     </nav>
 </div>
 
@@ -39,40 +44,39 @@ if($result_categories){
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $items_per_page;
 
-        // Get total number of products for pagination
-        $total_items_sql = "SELECT COUNT(*) FROM product WHERE category_id = ?";
-        $stmt_total = $conn->prepare($total_items_sql);
+        // Base queries
+        $count_sql = "SELECT COUNT(p.id) FROM product p";
+        // JOIN with category to get categoryCode for image paths
+        $select_sql = "SELECT p.*, c.categoryCode FROM product p JOIN category c ON p.category_id = c.id";
+
+        // Append WHERE clause if a category is selected
         if ($category) {
-            // Có chọn category -> lọc theo category
-            $total_items_sql = "SELECT COUNT(*) FROM product WHERE category_id = ?";
-            $stmt_total = $conn->prepare($total_items_sql);
-            $stmt_total->bind_param("i", $category['id']);
-        } else {
-            // Không chọn category -> lấy tất cả
-            $total_items_sql = "SELECT COUNT(*) FROM product";
-            $stmt_total = $conn->prepare($total_items_sql);
+            $count_sql .= " WHERE p.category_id = ?";
+            $select_sql .= " WHERE p.category_id = ?";
+        }
+
+        // Get total number of products for pagination
+        $stmt_total = $conn->prepare($count_sql);
+        if ($category) {
+            $stmt_total->bind_param("s", $category['id']);
         }
         $stmt_total->execute();
         $total_items_result = $stmt_total->get_result();
         $total_items = $total_items_result->fetch_row()[0];
         $total_pages = ceil($total_items / $items_per_page);
+        $stmt_total->close();
 
-
-
-        // Get products for the current page
+        // Get products for the current page, ordered by latest
+        $select_sql .= " ORDER BY p.id DESC LIMIT ? OFFSET ?";
+        $stmt_items = $conn->prepare($select_sql);
         if ($category) {
-            $sql = "SELECT * FROM product WHERE category_id = ? LIMIT ? OFFSET ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iii", $category['id'], $items_per_page, $offset);
+            $stmt_items->bind_param("sii", $category['id'], $items_per_page, $offset);
         } else {
-            // Không chọn danh mục -> lấy tất cả
-            $sql = "SELECT * FROM product LIMIT ? OFFSET ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ii", $items_per_page, $offset);
+            // No category, just bind limit and offset
+            $stmt_items->bind_param("ii", $items_per_page, $offset);
         }
-        $stmt->execute();
-        $items = $stmt->get_result();
-
+        $stmt_items->execute();
+        $items = $stmt_items->get_result();
         ?>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-4">
         <?php if($items && $items->num_rows > 0): ?>
@@ -80,7 +84,7 @@ if($result_categories){
             <div class="col">
                 <div class="text-center">
                     <a href="products-detail.php?id=<?= $item['id'] ?>" class="text-decoration-none text-dark">
-                        <img src="images/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>" class="img-fluid rounded product-image" alt="<?= htmlspecialchars($item['name']) ?>">
+                        <img src="images/<?= htmlspecialchars($item['categoryCode']) ?>/<?= htmlspecialchars($item['productImage']) ?>" class="img-fluid rounded product-image" alt="<?= htmlspecialchars($item['name']) ?>">
                         <div class="fw-medium mt-2"><?= htmlspecialchars($item['name']) ?></div>
                     </a>
                     <div class="text-muted"><?= number_format($item['price'],0,',','.') ?> ₫</div>
@@ -88,7 +92,7 @@ if($result_categories){
                             data-id="<?= $item['id'] ?>" 
                             data-name="<?= htmlspecialchars($item['name']) ?>" 
                             data-price="<?= $item['price'] ?>"
-                            data-image="images/<?= $category['categoryCode'] ?>/<?= $item['productImage'] ?>">
+                            data-image="images/<?= htmlspecialchars($item['categoryCode']) ?>/<?= htmlspecialchars($item['productImage']) ?>">
                         Thêm vào giỏ
                     </button>
                 </div>
