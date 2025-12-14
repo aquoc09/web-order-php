@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($coupon_db = $result_coupon->fetch_assoc()) {
                     if ($totalMoney >= $coupon_db['conditionAmount']) {
-                        $discountAmount = ($totalMoney * floatval($coupon_db['discountAmount'])) / 100;
+                        $discountAmount = floatval($coupon_db['discountAmount']);
                         $valid_coupons[] = [
                             'code' => $coupon_db['code'],
                             'discount_amount' => $discountAmount
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($paymentMethod === 'vnpay') {
         // For VNPAY, create a 'pending_payment' order first.
-        $orderId = create_order_and_details($conn, $userId, $address, $note, $finalTotal, 'vnpay', 'paid', $valid_coupons);
+        $orderId = create_order_and_details($conn, $userId, $address, $note, $finalTotal, 'vnpay', 'pending', $valid_coupons);
 
         if ($orderId) {
             $_SESSION['order_id_for_vnpay'] = $orderId;

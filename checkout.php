@@ -126,7 +126,7 @@ $stmt->close();
                             // Check if cart total meets the coupon's condition.
                             if ($total_price >= $coupon_db['conditionAmount']) {
                                 // The coupon is valid for this cart. Recalculate its discount value.
-                                $discountAmount = ($total_price * floatval($coupon_db['discountAmount'])) / 100;
+                                $discountAmount = floatval($coupon_db['discountAmount']);
                                 $valid_coupons[] = [
                                     'code' => $coupon_db['code'],
                                     'discount_amount' => $discountAmount
