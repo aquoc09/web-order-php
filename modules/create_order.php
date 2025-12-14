@@ -2,6 +2,22 @@
 //include '../includes/header.php';
 include '../function/order_helper.php'; // Include the new helper
 
+// 1. Authenticate user via token
+$token = $_COOKIE['auth_token'] ?? '';
+$currentUser = null;
+if ($token) {
+    $sql = "SELECT u.id, u.username FROM user_tokens t 
+            JOIN user u ON u.id = t.user_id
+            WHERE t.token = ? AND t.expires_at > NOW()";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows == 1) {
+        $currentUser = $result->fetch_assoc();
+    }
+}
+
 // Check if user is logged in
 if (!$currentUser) {
     header("Location: ../login-form.php");
