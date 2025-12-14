@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $coupon_res = $coupon_stmt->get_result();
             if($db_coupon = $coupon_res->fetch_assoc()){
                 if($total >= $db_coupon['conditionAmount']){
-                    $discountAmount = ($total * floatval($db_coupon['discountAmount'])) / 100;
+                    $discountAmount = floatval($db_coupon['discountAmount']);
                     $recalculated_coupons[] = [
                         'code' => $db_coupon['code'],
                         'discount_amount' => $discountAmount
