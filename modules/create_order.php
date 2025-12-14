@@ -1,5 +1,5 @@
 <?php
-include '../includes/header.php';
+//include '../includes/header.php';
 include '../function/order_helper.php'; // Include the new helper
 
 // Check if user is logged in
