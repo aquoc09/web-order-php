@@ -1,5 +1,6 @@
 <?php
 //include '../includes/header.php';
+include_once '../database/conf.php';
 include '../function/order_helper.php'; // Include the new helper
 
 // 1. Authenticate user via token
