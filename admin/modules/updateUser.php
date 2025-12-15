@@ -2,18 +2,18 @@
 require_once __DIR__ . '/../../database/conf.php';
 
 /* Lấy dữ liệu */
-$id        = $_POST['id'];
-$fullName  = $_POST['fullName'];
-$username  = $_POST['username'];
-$email     = $_POST['email'];
-$phone     = $_POST['phone'];
-$address   = $_POST['address'];
+$id        = $_POST['id']?? "";
+$fullName  = $_POST['fullName']?? "";
+$username  = $_POST['username'] ?? "";
+$email     = $_POST['email']?? "";
+$phone     = $_POST['phone']?? "";
+$address   = $_POST['address']?? "";
 
-$role      = $_POST['role'];
+$role      = $_POST['role']?? "";
 $active    = isset($_POST['active']) ? 1 : 0;
 
 /* Nếu có nhập mật khẩu mới thì hash, không thì giữ nguyên */
-$password = $_POST['password'];
+$password = $_POST['password']?? "";
 $newPasswordHash = null;
 
 if(!empty($password)){
