@@ -76,23 +76,23 @@ if(isset($_FILES['userImage']) && $_FILES['userImage']['error'] == 0){
 /* Cập nhật DB */
 if($newPasswordHash){
     // Có cập nhật mật khẩu
-    $sql = "UPDATE user SET fullname=?, username=?, password=?, email=?, phone=?, address=?, role=?, userImage=?, active=? 
+    $sql = "UPDATE user SET fullname=?, password=?, email=?, phone=?, address=?, role=?, userImage=?, active=? 
             WHERE id=?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssii", 
-        $fullName, $username, $newPasswordHash, $email, $phone, $address, 
+    $stmt->bind_param("sssssssii", 
+        $fullName, $newPasswordHash, $email, $phone, $address, 
         $role, $newImageName, $active, $id
     );
 
 } else {
     // Không cập nhật mật khẩu
-    $sql = "UPDATE user SET fullname=?, username=?, email=?, phone=?, address=?, role=?, userImage=?, active=? 
+    $sql = "UPDATE user SET fullname=?, email=?, phone=?, address=?, role=?, userImage=?, active=? 
             WHERE id=?";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssii", 
-        $fullName, $username, $email, $phone, $address, 
+    $stmt->bind_param("ssssssii", 
+        $fullName, $email, $phone, $address, 
         $role, $newImageName, $active, $id
     );
 }
