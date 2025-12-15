@@ -20,16 +20,18 @@ if(!empty($password)){
     $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
 }
 
-/* Kiểm tra username trùng (trừ chính user đó) */
-$sqlCheck = "SELECT id FROM user WHERE username=? AND id<>?";
-$stmt = $conn->prepare($sqlCheck);
-$stmt->bind_param("si", $username, $id);
-$stmt->execute();
-$rsCheck = $stmt->get_result();
+if(!empty($username)){
+    /* Kiểm tra username trùng (trừ chính user đó) */
+    $sqlCheck = "SELECT id FROM user WHERE username=? AND id<>?";
+    $stmt = $conn->prepare($sqlCheck);
+    $stmt->bind_param("si", $username, $id);
+    $stmt->execute();
+    $rsCheck = $stmt->get_result();
 
-if($rsCheck->num_rows > 0){
-    header("Location: ../index.php?mod=manage&ac=users&msg=error-user-exist");
-    exit();
+    if($rsCheck->num_rows > 0){
+        header("Location: ../index.php?mod=manage&ac=users&msg=error-user-exist");
+        exit();
+    }
 }
 
 /* Lấy thông tin user cũ */
